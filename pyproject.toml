@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "jack-compiler"
+version = "0.1.0"
+description = "Compiler for the Jack language (Nand2Tetris)"
+authors = ["Zachary Eller <37415056+zacharyeller13@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "jack_compiler"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytest = "^7.4.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
