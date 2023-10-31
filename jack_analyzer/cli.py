@@ -1,15 +1,16 @@
 """
 Module for accepting user input, parsing arguments, etc.
 """
+from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace
+from glob import glob
 import os
 import sys
 
 
 class InvalidOperationException(Exception):
-    """Operation is invalid
-    """
+    """Operation is invalid"""
 
 
 def initialize_argparser() -> ArgumentParser:
@@ -55,8 +56,28 @@ def initialize_arguments(arg_parser: ArgumentParser) -> Namespace:
     return arg_namespace
 
 
-def read_files() -> list[str]:
-    raise NotImplementedError
+def list_files(directory: str) -> list[str]:
+    """Return a list of files that will be analyzed
+
+    Returns:
+        `list[str]`: All .jack files in the directory
+    """
+
+    return glob(f"{directory}/*.jack")
+
+
+def start_cli() -> list[str]:
+    """Retrieve input from user and return all files to be processed
+
+    Returns:
+        `list[str]`: All .jack files to be processed by the analyzer
+    """
+    args = initialize_argparser()
+    file_or_dir = initialize_arguments(args).file_or_dir
+
+    if os.path.isdir(file_or_dir):
+        return list_files(file_or_dir)
+    return [file_or_dir]
 
 
 if __name__ == "__main__":
