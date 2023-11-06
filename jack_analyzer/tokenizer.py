@@ -37,6 +37,7 @@ def is_comment(line: str) -> bool:
     """
     return line.startswith("//")
 
+
 def parse_file(filename: str) -> deque:
     """Read a .jack file line by line, parsing as necessary and adding to a `deque`
 
