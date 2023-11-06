@@ -8,9 +8,7 @@ from glob import glob
 import os
 import sys
 
-
-class InvalidOperationException(Exception):
-    """Operation is invalid"""
+from exceptions import InvalidOperationException
 
 
 def initialize_argparser() -> ArgumentParser:
