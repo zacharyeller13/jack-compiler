@@ -117,10 +117,11 @@ def parse_file(filename: str) -> deque:
         # , dispose of it/do nothing
         if is_single_comment(line) or is_full_ml_comment(line):
             continue
-        # TODO: Handle actual mutli-line comments, including ones that start/end around actual tokens
-        line, active_comment = handle_complex_comments(line, active_comment)
-        if active_comment and line != "":
-            continue
 
-    raise NotImplementedError
+        line, active_comment = handle_complex_comments(line, active_comment)
+        # if there's no active comment and it's not an empty line, we need to process it
+        # So add it to the stack
+        if not active_comment and line != "":
+            stack.append(line)
+
     return stack
