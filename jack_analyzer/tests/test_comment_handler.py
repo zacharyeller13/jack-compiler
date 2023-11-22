@@ -3,7 +3,13 @@
 
 from __future__ import annotations
 
-from tokenizer import is_single_comment, is_full_ml_comment, handle_complex_comments
+from comment_handler import (
+    is_single_comment,
+    is_full_ml_comment,
+    handle_complex_comments,
+    remove_comments,
+    deque,
+)
 
 
 def test_is_single_comment_returns_true() -> None:
@@ -132,3 +138,17 @@ def test_handle_complex_comments_multi_comments_already_active_with_code_closed(
         expected_out_line,
         False,
     )
+
+
+def test_remove_comments() -> None:
+    test_contents = [
+        "//This is a single line comment",
+        "var int i;",
+        "/* ML comment start",
+        "let i = 1;",
+        "ML comment end */",
+        "/* Comment */ let i = 0; /* Also comment */",
+    ]
+    expected_output = deque(("var int i;", "let i = 0;"))
+
+    assert remove_comments(test_contents) == expected_output
