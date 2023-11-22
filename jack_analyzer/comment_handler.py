@@ -87,14 +87,14 @@ def handle_complex_comments(line: str, active_comment: bool) -> tuple[str, bool]
     return line.strip(), active_comment
 
 
-def remove_comments(file_contents: list[str]) -> deque:
+def remove_comments(file_contents: list[str]) -> deque[str]:
     """Process a file's contents, removing all comments and putting the remmainder in a deque
 
     Args:
         `file_contents` (str): The file's contents previously split on a newlines
 
     Returns:
-        `deque`: The file's contents as a stack, with all comments removed
+        `deque[str]`: The file's contents as a stack, with all comments removed
     """
 
     stack = deque()

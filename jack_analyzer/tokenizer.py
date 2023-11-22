@@ -7,11 +7,7 @@ pieces of a file into valid Jack tokens
 from __future__ import annotations
 from collections import deque
 
-from comment_handler import (
-    is_single_comment,
-    is_full_ml_comment,
-    handle_complex_comments,
-)
+from comment_handler import remove_comments
 
 
 def read_file(filename: str) -> list[str]:
@@ -29,30 +25,17 @@ def read_file(filename: str) -> list[str]:
         return contents
 
 
-def parse_file(filename: str) -> deque:
+def parse_file(filename: str) -> deque[str]:
     """Read a .jack file line by line, parsing as necessary and adding to a `deque`
 
     Args:
         `filename` (str): A file to read
 
     Returns:
-        `deque`: A deque (to be used as a stack) representing the tokenized file
+        `deque[str]`: A deque (to be used as a stack) representing the tokenized file
     """
 
-    stack = deque()
     contents = read_file(filename)
-    active_comment = False
-
-    for line in contents:
-        # if a single-line comment or the whole line is a multi-line comment
-        # , dispose of it/do nothing
-        if is_single_comment(line) or is_full_ml_comment(line):
-            continue
-
-        line, active_comment = handle_complex_comments(line, active_comment)
-        # if there's no active comment and it's not an empty line, we need to process it
-        # So add it to the stack
-        if not active_comment and line != "":
-            stack.append(line)
+    stack = remove_comments(contents)
 
     return stack
