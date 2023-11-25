@@ -10,6 +10,28 @@ from collections import deque
 from comment_handler import remove_comments
 
 
+def tokenize(stack: deque[str]) -> deque[str]:
+    """Process a stack of Jack code lines, splitting lines into individual tokens
+
+    Args:
+        `stack` (deque[str]): The Jack code lines, with comments already removed
+    
+    Returns:
+        `deque[str]`: A stack of Jack tokens
+    """
+
+    # Stack is empty
+    if not stack:
+        return stack
+    
+    tokenized_stack = deque()
+
+    while stack:
+        # Pop left so that we get line 1 first, line 2 second, etc.
+        tokenized_stack.append(stack.popleft())
+
+    return tokenized_stack
+
 def read_file(filename: str) -> list[str]:
     """Read a .jack file, and return it as a list of strings
 
@@ -37,5 +59,7 @@ def parse_file(filename: str) -> deque[str]:
 
     contents = read_file(filename)
     stack = remove_comments(contents)
+
+    # TODO: Pop items from stack, analyze if they are token by themselves or split into token parts
 
     return stack
