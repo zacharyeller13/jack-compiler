@@ -53,8 +53,6 @@ def tokenize_line(line: str) -> deque[str]:
 
     for word in split_line:
         if sum(sym in word for sym in SYMBOLS) > 0:
-            # TODO: Iterate word char by char, split at first symbol, repeat til
-            # symbol_count == 0
             tokens.extend(tokenize_symbols(word))
         else:
             tokens.append(word)
@@ -128,7 +126,6 @@ def parse_file(filename: str) -> deque[str]:
 
     contents = read_file(filename)
     stack = remove_comments(contents)
+    tokens = tokenize(stack)
 
-    # TODO: Pop items from stack, analyze if they are token by themselves or split into token parts
-
-    return stack
+    return tokens

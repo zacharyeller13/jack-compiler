@@ -22,6 +22,7 @@ def test_tokenize_no_symbols() -> None:
     expected_stack = deque(["return"])
     assert tokenize(stack) == expected_stack
 
+
 def test_tokenize_complex() -> None:
     stack = deque(["arg[0] = arg[1];"])
     expected_stack = deque(["arg", "[", "0", "]", "=", "arg", "[", "1", "]", ";"])
