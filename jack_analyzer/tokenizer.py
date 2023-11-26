@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections import deque
 
 from comment_handler import remove_comments
+from constants import SYMBOLS
 
 
 def tokenize(stack: deque[str]) -> deque[str]:
@@ -15,7 +16,7 @@ def tokenize(stack: deque[str]) -> deque[str]:
 
     Args:
         `stack` (deque[str]): The Jack code lines, with comments already removed
-    
+
     Returns:
         `deque[str]`: A stack of Jack tokens
     """
@@ -23,14 +24,82 @@ def tokenize(stack: deque[str]) -> deque[str]:
     # Stack is empty
     if not stack:
         return stack
-    
-    tokenized_stack = deque()
+
+    tokens = deque()
 
     while stack:
         # Pop left so that we get line 1 first, line 2 second, etc.
-        tokenized_stack.append(stack.popleft())
+        tokens.extend(tokenize_line(stack.popleft()))
 
-    return tokenized_stack
+    return tokens
+
+
+def tokenize_line(line: str) -> deque[str]:
+    """Process a single Jack code line, splitting into individual tokens
+
+    Args:
+        `line` (str): The Jack code line
+
+    Returns:
+        `deque[str]`: A stack of the tokens.
+            Stack/deque because it's optimized for repeated adds
+    """
+
+    if not line:
+        return deque(line)
+
+    split_line = line.split()
+    tokens = deque()
+
+    for word in split_line:
+        if sum(sym in word for sym in SYMBOLS) > 0:
+            # TODO: Iterate word char by char, split at first symbol, repeat til
+            # symbol_count == 0
+            tokens.extend(tokenize_symbols(word))
+        else:
+            tokens.append(word)
+
+    return tokens
+
+
+def tokenize_symbols(word: str) -> deque[str]:
+    """Process a single string that contains on or more`SYMBOLS`,
+        splitting it into individual tokens
+
+    Args:
+        `word` (str): The string to be tokenized
+
+    Returns:
+        `deque[str]`: A stack of tokens
+    """
+
+    tokens = deque()
+    token = ""
+
+    for char in word:
+        if not is_symbol(char):
+            token += char
+        else:
+            if token:
+                tokens.append(token)
+            tokens.append(char)
+            token = ""
+
+    return tokens
+
+
+def is_symbol(char: str) -> bool:
+    """Return true if char is a `SYMBOL`
+
+    Args:
+        `char`: Character that may be a symbol
+
+    Returns:
+        `bool`: True if char in `SYMBOLS` else False
+    """
+
+    return char in SYMBOLS
+
 
 def read_file(filename: str) -> list[str]:
     """Read a .jack file, and return it as a list of strings
