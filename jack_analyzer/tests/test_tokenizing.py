@@ -27,3 +27,27 @@ def test_tokenize_complex() -> None:
     stack = deque(["arg[0] = arg[1];"])
     expected_stack = deque(["arg", "[", "0", "]", "=", "arg", "[", "1", "]", ";"])
     assert tokenize(stack) == expected_stack
+
+
+def test_tokenize_with_string_constants() -> None:
+    stack = deque(['let stringVal = "hello world";'])
+    expected_stack = deque(["let", "stringVal", "=", '"hello world"', ";"])
+    assert tokenize(stack) == expected_stack
+
+
+def test_tokenize_with_string_constants_containing_symbol() -> None:
+    stack = deque(['let stringVal = "hello; world";'])
+    expected_stack = deque(["let", "stringVal", "=", '"hello; world"', ";"])
+    assert tokenize(stack) == expected_stack
+
+
+def test_tokenize_empty_string_constant() -> None:
+    stack = deque(['let stringVal = "";'])
+    expected_stack = deque(["let", "stringVal", "=", '""', ";"])
+    assert tokenize(stack) == expected_stack
+
+
+def test_tokenize_string_constant_no_whitespace() -> None:
+    stack = deque(['let stringVal = "a";'])
+    expected_stack = deque(["let", "stringVal", "=", '"a"', ";"])
+    assert tokenize(stack) == expected_stack

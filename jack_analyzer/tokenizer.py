@@ -7,8 +7,36 @@ pieces of a file into valid Jack tokens
 from __future__ import annotations
 from collections import deque
 
+import re
+
 from comment_handler import remove_comments
 from constants import SYMBOLS
+
+
+def is_symbol(char: str) -> bool:
+    """Return true if char is a `SYMBOL`
+
+    Args:
+        `char`: Character that may be a symbol
+
+    Returns:
+        `bool`: True if char in `SYMBOLS` else False
+    """
+
+    return char in SYMBOLS
+
+
+def is_string_constant(word: str) -> bool:
+    """Return true if word is a string constant
+
+    Args:
+        `word`: A string
+
+    Returns:
+        `bool`: True if starts and ends with " denoting a string constant
+    """
+
+    return word.startswith('"') and word.endswith('"') and word.count('"') == 2
 
 
 def tokenize(stack: deque[str]) -> deque[str]:
@@ -48,11 +76,15 @@ def tokenize_line(line: str) -> deque[str]:
     if not line:
         return deque(line)
 
-    split_line = line.split()
+    pattern = re.compile(r'"[^"]*?"|\S+')
+    # split_line = line.split()
+    split_line = pattern.findall(line)
     tokens = deque()
 
     for word in split_line:
-        if sum(sym in word for sym in SYMBOLS) > 0:
+        if is_string_constant(word):
+            tokens.append(word)
+        elif sum(sym in word for sym in SYMBOLS) > 0:
             tokens.extend(tokenize_symbols(word))
         else:
             tokens.append(word)
@@ -80,23 +112,10 @@ def tokenize_symbols(word: str) -> deque[str]:
         else:
             if token:
                 tokens.append(token)
+                token = ""
             tokens.append(char)
-            token = ""
 
     return tokens
-
-
-def is_symbol(char: str) -> bool:
-    """Return true if char is a `SYMBOL`
-
-    Args:
-        `char`: Character that may be a symbol
-
-    Returns:
-        `bool`: True if char in `SYMBOLS` else False
-    """
-
-    return char in SYMBOLS
 
 
 def read_file(filename: str) -> list[str]:
