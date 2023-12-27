@@ -10,7 +10,7 @@ from collections import deque
 import re
 
 from comment_handler import remove_comments
-from constants import SYMBOLS
+from constants import KEYWORDS, SYMBOLS
 
 
 def is_symbol(char: str) -> bool:
@@ -37,6 +37,45 @@ def is_string_constant(word: str) -> bool:
     """
 
     return word.startswith('"') and word.endswith('"') and word.count('"') == 2
+
+
+def is_keyword(word: str) -> bool:
+    """Return true if the word/token is a reserved keyword
+
+    Args:
+        `word` (str): A string
+
+    Returns:
+        `bool`: True if in the set of `KEYWORDS`, else False
+    """
+
+    return word in KEYWORDS
+
+
+def classify_token(token: str) -> str:
+    """Return the type of token
+
+    Args:
+        `token` (str): The current token to classify
+
+    Returns:
+        `str`: The type/classification of the token.  One of:
+            - keyword
+            - symbol
+            - integerConstant
+            - stringConstant
+            - identifier
+    """
+    
+    if is_keyword(token):
+        return "keyword"
+    if is_symbol(token):
+        return "symbol"
+    if token.isdigit():
+        return "integerConstant"
+    if is_string_constant(token):
+        return "stringConstant"
+    return "identifier"
 
 
 def tokenize(stack: deque[str]) -> deque[str]:
@@ -77,7 +116,6 @@ def tokenize_line(line: str) -> deque[str]:
         return deque(line)
 
     pattern = re.compile(r'"[^"]*?"|\S+')
-    # split_line = line.split()
     split_line = pattern.findall(line)
     tokens = deque()
 

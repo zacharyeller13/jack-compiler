@@ -1,9 +1,10 @@
-"""Tests for tokenizer module
+"""
+Tests for tokenizer module
 """
 
 from __future__ import annotations
 
-from tokenizer import tokenize, deque
+from tokenizer import tokenize, deque, classify_token
 
 
 def test_tokenize_empty() -> None:
@@ -51,3 +52,23 @@ def test_tokenize_string_constant_no_whitespace() -> None:
     stack = deque(['let stringVal = "a";'])
     expected_stack = deque(["let", "stringVal", "=", '"a"', ";"])
     assert tokenize(stack) == expected_stack
+
+
+def test_classify_token_keyword() -> None:
+    assert classify_token("if") == "keyword"
+
+
+def test_classify_token_symbol() -> None:
+    assert classify_token("/") == "symbol"
+
+
+def test_classify_token_integer_constant() -> None:
+    assert classify_token("1") == "integerConstant"
+
+
+def test_classify_token_string_constant() -> None:
+    assert classify_token('"a string constant"') == "stringConstant"
+
+
+def test_classify_token_identifier() -> None:
+    assert classify_token("x") == "identifier"
