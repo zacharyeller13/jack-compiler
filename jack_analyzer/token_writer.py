@@ -12,7 +12,7 @@ from tokenizer import classify_token
 
 
 def write_tokens_file(filename: str, tokens: deque[str]) -> None:
-    with open(filename, "w", encoding="UTF-8") as f:
+    with open(f"{filename}TT.xml", "w", encoding="UTF-8") as f:
         write_opener(f)
         for token in tokens:
             write_token(f, token)
@@ -37,5 +37,5 @@ def write_token(file_ptr: TextIOWrapper, token: str) -> None:
         `token` (str): The current token to write
     """
 
-    template = "<{token_type}> {token} </{token_type}>"
-    file_ptr.write(template.format(token_type=classify_token(token), token=token))
+    template = "<{token_type}> {token} </{token_type}>\n"
+    file_ptr.write(template.format(token_type=classify_token(token), token=token.replace('"', '')))

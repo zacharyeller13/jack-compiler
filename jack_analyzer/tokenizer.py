@@ -66,7 +66,7 @@ def classify_token(token: str) -> str:
             - stringConstant
             - identifier
     """
-    
+
     if is_keyword(token):
         return "keyword"
     if is_symbol(token):
@@ -115,14 +115,16 @@ def tokenize_line(line: str) -> deque[str]:
     if not line:
         return deque(line)
 
-    pattern = re.compile(r'"[^"]*?"|\S+')
+    pattern = re.compile(r'"[^"]*?"|[^"\s]+')
     split_line = pattern.findall(line)
+    print(split_line)
     tokens = deque()
 
     for word in split_line:
         if is_string_constant(word):
             tokens.append(word)
         elif sum(sym in word for sym in SYMBOLS) > 0:
+            print(word)
             tokens.extend(tokenize_symbols(word))
         else:
             tokens.append(word)
@@ -144,6 +146,10 @@ def tokenize_symbols(word: str) -> deque[str]:
     tokens = deque()
     token = ""
 
+    # TODO:
+    # does not handle identifiers that are at the end of a "word"
+    # example: "while (i < length {" > ["while", "(i", "<", "length", "{"]
+    # and only the '(' gets appended, 'i' gets discarded
     for char in word:
         if not is_symbol(char):
             token += char
