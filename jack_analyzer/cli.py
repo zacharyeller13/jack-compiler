@@ -19,7 +19,7 @@ def initialize_argparser() -> ArgumentParser:
     """
 
     arg_parser = ArgumentParser(
-        prog="JackAnalzyer",
+        prog="JackAnalyzer",
         description="Analyze .jack file(s) and output as\
             .xml file(s) to be used in a larger Jack Compiler",
     )
@@ -45,7 +45,7 @@ def initialize_arguments(arg_parser: ArgumentParser) -> Namespace:
 
     arg_namespace = arg_parser.parse_args()
 
-    if arg_namespace.file_or_dir[-4:] != ".jack" and not os.path.isdir(
+    if arg_namespace.file_or_dir[-5:] != ".jack" and not os.path.isdir(
         arg_namespace.file_or_dir
     ):
         arg_parser.print_usage()
