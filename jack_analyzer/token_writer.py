@@ -12,7 +12,7 @@ from tokenizer import classify_token, escape_token
 
 
 def write_tokens_file(filename: str, tokens: deque[str]) -> None:
-    with open(f"{filename}TT.xml", "w", encoding="UTF-8") as f:
+    with open(f"{filename}T.xml", "w", encoding="UTF-8") as f:
         write_opener(f)
         for token in tokens:
             write_token(f, token)
