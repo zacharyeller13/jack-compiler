@@ -51,3 +51,5 @@ SYMBOLS = {
     "=",
     "~",
 }
+
+ESCAPED_SYMBOLS = {"<": "&lt;", ">": "&gt;", '"': "&quot;", "&": "&amp;"}

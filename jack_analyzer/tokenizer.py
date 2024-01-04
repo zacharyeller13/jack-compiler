@@ -10,7 +10,7 @@ from collections import deque
 import re
 
 from comment_handler import remove_comments
-from constants import KEYWORDS, SYMBOLS
+from constants import KEYWORDS, SYMBOLS, ESCAPED_SYMBOLS
 
 
 def is_symbol(char: str) -> bool:
@@ -78,6 +78,24 @@ def classify_token(token: str) -> str:
     return "identifier"
 
 
+def escape_token(token: str) -> str:
+    """Escape reserved symbols such as `<` to `%lt;` and replace `"` in any string literals
+
+    Args:
+        `token` (str): The token to escape. Escaping really only for one of:
+        `<`, `>`, and `&`
+
+    Returns:
+        `str`: An escaped version of the char. One of:
+        `&lt;`, `&gt;`, and `&amp;` or the token itself with `"` removed
+    """
+
+    # Instead of adding an if statement, I think it's faster/cleaner to
+    # just check every token against our escape dictionary and then return
+    # the token itself as the default if it's not one to be escaped.
+    return ESCAPED_SYMBOLS.get(token, token).replace('"', "")
+
+
 def tokenize(stack: deque[str]) -> deque[str]:
     """Process a stack of Jack code lines, splitting lines into individual tokens
 
@@ -117,14 +135,12 @@ def tokenize_line(line: str) -> deque[str]:
 
     pattern = re.compile(r'"[^"]*?"|[^"\s]+')
     split_line = pattern.findall(line)
-    print(split_line)
     tokens = deque()
 
     for word in split_line:
         if is_string_constant(word):
             tokens.append(word)
         elif sum(sym in word for sym in SYMBOLS) > 0:
-            print(word)
             tokens.extend(tokenize_symbols(word))
         else:
             tokens.append(word)
@@ -133,8 +149,8 @@ def tokenize_line(line: str) -> deque[str]:
 
 
 def tokenize_symbols(word: str) -> deque[str]:
-    """Process a single string that contains on or more`SYMBOLS`,
-        splitting it into individual tokens
+    """Process a single string that contains on or more `SYMBOLS`, splitting it into individual tokens.
+        `<`, `>`, `"` and `&` are output as `&lt;`, `&gt;`, `&quot;`, and `&amp;`
 
     Args:
         `word` (str): The string to be tokenized
@@ -146,10 +162,6 @@ def tokenize_symbols(word: str) -> deque[str]:
     tokens = deque()
     token = ""
 
-    # TODO:
-    # does not handle identifiers that are at the end of a "word"
-    # example: "while (i < length {" > ["while", "(i", "<", "length", "{"]
-    # and only the '(' gets appended, 'i' gets discarded
     for char in word:
         if not is_symbol(char):
             token += char
@@ -158,6 +170,10 @@ def tokenize_symbols(word: str) -> deque[str]:
                 tokens.append(token)
                 token = ""
             tokens.append(char)
+
+    # Final add to tokens if we have a symbol of some kind at the end of the word
+    if token:
+        tokens.append(token)
 
     return tokens
 

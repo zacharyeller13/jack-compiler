@@ -4,7 +4,7 @@ Tests for tokenizer module
 
 from __future__ import annotations
 
-from tokenizer import tokenize, deque, classify_token
+from tokenizer import tokenize, deque, classify_token, escape_token
 
 
 def test_tokenize_empty() -> None:
@@ -52,6 +52,20 @@ def test_tokenize_string_constant_no_whitespace() -> None:
     stack = deque(['let stringVal = "a";'])
     expected_stack = deque(["let", "stringVal", "=", '"a"', ";"])
     assert tokenize(stack) == expected_stack
+
+
+def test_tokenize_identifiers_next_to_symbol() -> None:
+    stack = deque(["while (i < length) {"])
+    expected_stack = deque(["while", "(", "i", "<", "length", ")", "{"])
+    assert tokenize(stack) == expected_stack
+
+
+def test_escape_tokens() -> None:
+    # Not testing for '"' > "&quot;" because we should never have a standalone quotation mark
+    # And string literals have the quotation mark removed when they are processed
+    tokens = {"&", "<", ">", '"A string literal"'}
+    expected_output = {"&amp;", "&lt;", "&gt;", "A string literal"}
+    assert set(map(escape_token, tokens)) == expected_output
 
 
 def test_classify_token_keyword() -> None:

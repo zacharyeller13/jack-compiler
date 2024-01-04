@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import deque
 from io import TextIOWrapper
 
-from tokenizer import classify_token
+from tokenizer import classify_token, escape_token
 
 
 def write_tokens_file(filename: str, tokens: deque[str]) -> None:
@@ -38,4 +38,4 @@ def write_token(file_ptr: TextIOWrapper, token: str) -> None:
     """
 
     template = "<{token_type}> {token} </{token_type}>\n"
-    file_ptr.write(template.format(token_type=classify_token(token), token=token.replace('"', '')))
+    file_ptr.write(template.format(token_type=classify_token(token), token=escape_token(token)))
