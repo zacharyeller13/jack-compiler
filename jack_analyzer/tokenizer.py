@@ -7,6 +7,7 @@ pieces of a file into valid Jack tokens
 from __future__ import annotations
 from collections import deque
 
+import html
 import re
 
 from comment_handler import remove_comments
@@ -93,7 +94,8 @@ def escape_token(token: str) -> str:
     # Instead of adding an if statement, I think it's faster/cleaner to
     # just check every token against our escape dictionary and then return
     # the token itself as the default if it's not one to be escaped.
-    return ESCAPED_SYMBOLS.get(token, token).replace('"', "")
+    # return ESCAPED_SYMBOLS.get(token, token).replace('"', "")
+    return html.escape(token.replace('"', ""))
 
 
 def tokenize(stack: deque[str]) -> deque[str]:
