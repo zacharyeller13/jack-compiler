@@ -94,6 +94,21 @@ def escape_token(token: str) -> str:
     return html.escape(token.replace('"', ""))
 
 
+def tag_token(token: str) -> str:
+    """Tags a token with it's respective XML tags
+
+    Args:
+        `token` (str): The token
+
+    Returns:
+        `str`: A formatted string of `TOKEN_TEMPLATE` with the token type and token
+    """
+
+    return TOKEN_TEMPLATE.format(
+        token_type=classify_token(token), token=escape_token(token)
+    )
+
+
 def tokenize(stack: deque[str]) -> deque[str]:
     """Process a stack of Jack code lines, splitting lines into individual tokens
 
@@ -135,29 +150,13 @@ def tokenize_line(line: str) -> deque[str]:
     split_line = pattern.findall(line)
     tokens = deque()
 
-    # for word in split_line:
-    #     if is_string_constant(word):
-    #         tokens.append(word)
-    #     elif sum(sym in word for sym in SYMBOLS) > 0:
-    #         tokens.extend(tokenize_symbols(word))
-    #     else:
-    #         tokens.append(word)
-
     for word in split_line:
         if is_string_constant(word):
-            tokens.append(
-                TOKEN_TEMPLATE.format(
-                    token_type=classify_token(word), token=escape_token(word)
-                )
-            )
+            tokens.append(tag_token(word))
         elif sum(sym in word for sym in SYMBOLS) > 0:
             tokens.extend(tokenize_symbols(word))
         else:
-            tokens.append(
-                TOKEN_TEMPLATE.format(
-                    token_type=classify_token(word), token=escape_token(word)
-                )
-            )
+            tokens.append(tag_token(word))
 
     return tokens
 
@@ -181,25 +180,13 @@ def tokenize_symbols(word: str) -> deque[str]:
             token += char
         else:
             if token:
-                tokens.append(
-                    TOKEN_TEMPLATE.format(
-                        token_type=classify_token(token), token=escape_token(token)
-                    )
-                )
+                tokens.append(tag_token(token))
                 token = ""
-            tokens.append(
-                TOKEN_TEMPLATE.format(
-                    token_type=classify_token(char), token=escape_token(char)
-                )
-            )
+            tokens.append(tag_token(char))
 
     # Final add to tokens if we have a symbol of some kind at the end of the word
     if token:
-        tokens.append(
-            TOKEN_TEMPLATE.format(
-                token_type=classify_token(token), token=escape_token(token)
-            )
-        )
+        tokens.append(tag_token(token))
 
     return tokens
 
