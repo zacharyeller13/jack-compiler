@@ -16,7 +16,7 @@ def main() -> None:
         filename = file[:-5]
         tokens = parse_file(file)
         print(tokens)
-        write_tokens_file(filename, tokens)
+        write_tokens_file(filename+'T', tokens)
 
 
 if __name__ == "__main__":

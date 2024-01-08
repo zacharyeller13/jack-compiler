@@ -11,7 +11,7 @@ import html
 import re
 
 from comment_handler import remove_comments
-from constants import KEYWORDS, SYMBOLS, ESCAPED_SYMBOLS
+from constants import KEYWORDS, SYMBOLS, TOKEN_TEMPLATE
 
 
 def is_symbol(char: str) -> bool:
@@ -91,10 +91,6 @@ def escape_token(token: str) -> str:
         `&lt;`, `&gt;`, and `&amp;` or the token itself with `"` removed
     """
 
-    # Instead of adding an if statement, I think it's faster/cleaner to
-    # just check every token against our escape dictionary and then return
-    # the token itself as the default if it's not one to be escaped.
-    # return ESCAPED_SYMBOLS.get(token, token).replace('"', "")
     return html.escape(token.replace('"', ""))
 
 
@@ -139,13 +135,29 @@ def tokenize_line(line: str) -> deque[str]:
     split_line = pattern.findall(line)
     tokens = deque()
 
+    # for word in split_line:
+    #     if is_string_constant(word):
+    #         tokens.append(word)
+    #     elif sum(sym in word for sym in SYMBOLS) > 0:
+    #         tokens.extend(tokenize_symbols(word))
+    #     else:
+    #         tokens.append(word)
+
     for word in split_line:
         if is_string_constant(word):
-            tokens.append(word)
+            tokens.append(
+                TOKEN_TEMPLATE.format(
+                    token_type=classify_token(word), token=escape_token(word)
+                )
+            )
         elif sum(sym in word for sym in SYMBOLS) > 0:
             tokens.extend(tokenize_symbols(word))
         else:
-            tokens.append(word)
+            tokens.append(
+                TOKEN_TEMPLATE.format(
+                    token_type=classify_token(word), token=escape_token(word)
+                )
+            )
 
     return tokens
 
@@ -169,13 +181,25 @@ def tokenize_symbols(word: str) -> deque[str]:
             token += char
         else:
             if token:
-                tokens.append(token)
+                tokens.append(
+                    TOKEN_TEMPLATE.format(
+                        token_type=classify_token(token), token=escape_token(token)
+                    )
+                )
                 token = ""
-            tokens.append(char)
+            tokens.append(
+                TOKEN_TEMPLATE.format(
+                    token_type=classify_token(char), token=escape_token(char)
+                )
+            )
 
     # Final add to tokens if we have a symbol of some kind at the end of the word
     if token:
-        tokens.append(token)
+        tokens.append(
+            TOKEN_TEMPLATE.format(
+                token_type=classify_token(token), token=escape_token(token)
+            )
+        )
 
     return tokens
 
