@@ -19,7 +19,7 @@ class CompilationEngine:
 
     Follows the Jack grammar:
 
-        `class`: `class` `className` `'{'` `classVarDec*` `subrouteinDec`* `'}'`
+        `class`: `class` `className` `'{'` `classVarDec*` `subroutineDec`* `'}'`
 
         `classVarDec`: (`static` | `field`) `type` `varName` (`',' varName`)* `';'`
 
@@ -74,6 +74,13 @@ class CompilationEngine:
             self._tokens = deque(tokens)
         else:
             self._tokens = parse_func(filename)
+
+        # Automatically set the first token
+        self.advance_token()
+
+    def advance_token(self) -> None:
+        """Advances the currently active token"""
+        self._current_token = self._tokens.popleft()
 
     def compile_class(self, /) -> None:
         raise NotImplementedError

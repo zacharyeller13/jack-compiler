@@ -11,7 +11,7 @@ from compilation_engine import CompilationEngine
 
 @fixture
 def tokens():
-    yield [
+    return [
         "<keyword> var </keyword>\n",
         "<keyword> int </keyword>\n",
         "<identifier> i </identifier>\n",
@@ -24,18 +24,25 @@ def tokens():
     ]
 
 
-def test_constructor(tokens) -> None:
-    engine = CompilationEngine(
-        "test",
-        tokens=tokens,
-    )
+@fixture
+def engine(tokens) -> CompilationEngine:
+    return CompilationEngine("test", tokens)
+
+
+def test_constructor(tokens, engine) -> None:
     assert isinstance(engine, CompilationEngine)
-    assert engine._tokens == deque(tokens)
+    assert engine._tokens == deque(tokens[1:])
     assert engine._filename == "test"
 
 
 def test_constructor_no_tokens(tokens) -> None:
     engine = CompilationEngine("test", tokens=None, parse_func=lambda x: deque(tokens))
     assert isinstance(engine, CompilationEngine)
-    assert engine._tokens == deque(tokens)
+    assert engine._tokens == deque(tokens[1:])
     assert engine._filename == "test"
+
+
+def test_advance_token(tokens, engine) -> None:
+    assert engine._current_token == tokens[0]
+    engine.advance_token()
+    assert engine._current_token == tokens[1]
