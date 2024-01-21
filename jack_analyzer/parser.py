@@ -69,6 +69,51 @@ class CompilationEngine:
         """
         self._tokens = tokens
 
+    def compile_class(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_class_var_dec(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_subroutine_dec(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_parameter_list(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_subroutine_body(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_var_dec(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_statements(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_let(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_if(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_while(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_do(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_return(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_expression(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_term(self, /) -> None:
+        raise NotImplementedError
+
+    def compile_expression_list(self, /) -> None:
+        raise NotImplementedError
+
 
 def compile_class(token_file: str) -> None:
     """Write the full class.  In Jack all files are also classes,
