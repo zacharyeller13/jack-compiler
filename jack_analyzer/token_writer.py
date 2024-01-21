@@ -8,8 +8,7 @@ from __future__ import annotations
 from collections import deque
 from io import TextIOWrapper
 
-from constants import EO_TOKEN_FILE, TOKEN_TEMPLATE
-from tokenizer import classify_token, escape_token
+from constants import EO_TOKEN_FILE
 
 
 def write_tokens_file(filename: str, tokens: deque[str]) -> None:
