@@ -15,7 +15,7 @@ from tokenizer import parse_file
 
 
 class CompilationEngine:
-    """Takes a set of tokens or filestream and outputs an XML file of the fully analyzed syntax.
+    """Takes a set of tokens or file and outputs an XML file of the fully analyzed syntax.
 
     Follows the Jack grammar:
 
@@ -46,7 +46,11 @@ class CompilationEngine:
 
     Attributes:
 
-        TODO: List attributes etc.
+        `_filename` (str): The filename to which we write the compiled code.
+        `_tokens` (deque[str]): All remaining tokens to be compiled. 
+            Is reduced by 1 token each time we `advance_token`.
+        `_current_token` (str): The current token to be compiled.
+            Updated by `advance_token` when necessary to move to the next token.
 
     """
 

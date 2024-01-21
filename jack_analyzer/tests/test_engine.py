@@ -43,6 +43,6 @@ def test_constructor_no_tokens(tokens) -> None:
 
 
 def test_advance_token(tokens, engine) -> None:
-    assert engine._current_token == tokens[0]
+    assert engine._current_token == tokens[0] == "<keyword> var </keyword>\n"
     engine.advance_token()
-    assert engine._current_token == tokens[1]
+    assert engine._current_token == tokens[1] == "<keyword> int </keyword>\n"
