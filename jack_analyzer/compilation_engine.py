@@ -1,23 +1,17 @@
 """
-Module with helper functions to parse the `*T.xml` token files for a Jack program
+Module with helper functions to parse, compile, and output files for tokens of a Jack program
 
 Should unescape escaped tokens as well as form new structures based on the Jack Grammar
 """
 
 from __future__ import annotations
 from collections import deque
+from typing import Callable, Iterable, Optional
 
 import html
-from io import TextIOWrapper
-from typing import Iterable
 
 from constants import KEYWORDS, SYMBOLS, EO_TOKEN_FILE
 from tokenizer import parse_file
-
-
-# TODO: decision - Create a class with methods to match the spec (compile_xxx methods)
-# And maintain state for each file? Should make it easier than passing file pointers around
-# between functions
 
 
 class CompilationEngine:
@@ -57,17 +51,29 @@ class CompilationEngine:
     """
 
     def __init__(
-        self, tokens: deque[str], filestream: TextIOWrapper | None = None
+        self,
+        filename: str,
+        tokens: Optional[Iterable[str]] = None,
+        *,
+        parse_func: Callable[[str], deque[str]] = parse_file,
     ) -> None:
         """Creates an instance of CompilationEngine
 
         Args:
-            `tokens` (deque[str] | None): A deque of tokens . If none, the `filestream` will be used
-                to create the tokens
-            `filestream` (TextIOWrapper | None): If tokens is null, parse the filestream and create
-                all tokens
+            `filename` (str): The filename to which we will write the compiled code.
+                If tokens is null, we also parse the file and create all tokens.
+            `tokens` (Iterable[str] | None): An Iterable of tokens.
+                If none, the `filename` will be passed to a `parse_func`
+                to create the necessary tokens.
+            `parse_func` (Callable[[str] , deque[str]]): Function used to parse tokens from
+                `filename` if tokens are not provided. (default: `parse_file` from `tokenizer`)
         """
-        self._tokens = tokens
+        self._filename = filename
+
+        if tokens:
+            self._tokens = deque(tokens)
+        else:
+            self._tokens = parse_func(filename)
 
     def compile_class(self, /) -> None:
         raise NotImplementedError
