@@ -7,6 +7,9 @@ ML_COMMENT_START = "/*"
 ML_COMMENT_END = "*/"
 EO_TOKEN_FILE = "</tokens>"
 TOKEN_TEMPLATE = "<{token_type}> {token} </{token_type}>\n"
+VAR_DEC_START = "<varDec>\n"
+VAR_DEC_END = "</varDec>\n"
+STATEMENT_TERMINATOR = "<symbol> ; </symbol>\n"
 
 KEYWORDS = {
     "class",

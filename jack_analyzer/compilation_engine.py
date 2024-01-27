@@ -10,7 +10,7 @@ from typing import Callable, Iterable, Optional
 
 import html
 
-from constants import KEYWORDS, SYMBOLS, EO_TOKEN_FILE
+from constants import EO_TOKEN_FILE, STATEMENT_TERMINATOR, VAR_DEC_START, VAR_DEC_END
 from tokenizer import parse_file
 
 
@@ -47,7 +47,7 @@ class CompilationEngine:
     Attributes:
 
         `_filename` (str): The filename to which we write the compiled code.
-        `_tokens` (deque[str]): All remaining tokens to be compiled. 
+        `_tokens` (deque[str]): All remaining tokens to be compiled.
             Is reduced by 1 token each time we `advance_token`.
         `_current_token` (str): The current token to be compiled.
             Updated by `advance_token` when necessary to move to the next token.
@@ -82,6 +82,9 @@ class CompilationEngine:
         # Automatically set the first token
         self.advance_token()
 
+        # Create a default queue of compiled items
+        self._compiled_tokens = deque()
+
     def advance_token(self) -> None:
         """Advances the currently active token"""
         self._current_token = self._tokens.popleft()
@@ -102,7 +105,23 @@ class CompilationEngine:
         raise NotImplementedError
 
     def compile_var_dec(self, /) -> None:
-        raise NotImplementedError
+        """Compiles a `var` declaration according to the varDec grammar
+
+        `varDec`: `'var'` `type` `varName` (`',' varName`)*
+
+        Will be called if `self._current_token` == `var` and we're in a subroutine body.
+        """
+        if self._current_token != "<keyword> var </keyword>\n":
+            raise ValueError(f"{self._current_token} is not a var declaration")
+
+        self._compiled_tokens.append(VAR_DEC_START)
+
+        while self._current_token != STATEMENT_TERMINATOR:
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        self._compiled_tokens.append(self._current_token)
+        self._compiled_tokens.append(VAR_DEC_END)
 
     def compile_statements(self, /) -> None:
         raise NotImplementedError
