@@ -10,7 +10,16 @@ from typing import Callable, Iterable, Optional
 
 import html
 
-from constants import EO_TOKEN_FILE, STATEMENT_TERMINATOR, VAR_DEC_START, VAR_DEC_END
+from constants import (
+    EO_TOKEN_FILE,
+    OPS,
+    STATEMENT_TERMINATOR,
+    VAR_DEC_START,
+    VAR_DEC_END,
+    LET_START,
+    LET_END,
+)
+
 from tokenizer import parse_file
 
 
@@ -86,8 +95,16 @@ class CompilationEngine:
         self._compiled_tokens = deque()
 
     def advance_token(self) -> None:
-        """Advances the currently active token"""
-        self._current_token = self._tokens.popleft()
+        """Advances the currently active token
+
+        If the tokens deque is empty when trying to advance, set the current token
+        to an empty string.  This should only be an issue at the end of `compile_class`
+        """
+
+        try:
+            self._current_token = self._tokens.popleft()
+        except IndexError:
+            self._current_token = ""
 
     def compile_class(self, /) -> None:
         raise NotImplementedError
@@ -104,7 +121,7 @@ class CompilationEngine:
     def compile_subroutine_body(self, /) -> None:
         raise NotImplementedError
 
-    def compile_var_dec(self, /) -> None:
+    def compile_var_dec(self) -> None:
         """Compiles a `var` declaration according to the varDec grammar
 
         `varDec`: `'var'` `type` `varName` (`',' varName`)*
@@ -120,14 +137,42 @@ class CompilationEngine:
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
-        self._compiled_tokens.append(self._current_token)
+        self._compiled_tokens.append(self._current_token)  # statement terminator
         self._compiled_tokens.append(VAR_DEC_END)
+        self.advance_token()
 
     def compile_statements(self, /) -> None:
         raise NotImplementedError
 
-    def compile_let(self, /) -> None:
-        raise NotImplementedError
+    def compile_let(self) -> None:
+        """Compiles a `let` statement according to `letStatement` grammar
+
+        `let varName` (`'['expression']'`)? `'=' expression ';'`
+
+        Will be called if `self._current_token` == `let`
+        """
+        if self._current_token != "<keyword> let </keyword>\n":
+            raise ValueError(f"{self._current_token} is not a let statement")
+
+        self._compiled_tokens.append(LET_START)
+
+        while self._current_token != STATEMENT_TERMINATOR:
+            # as in `let i = 1;`
+            # or `let arr[i] = 1;`
+            if self._current_token in (
+                "<symbol> = </symbol>\n",
+                "<symbol> [ </symbol>\n",
+            ):
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+                self.compile_expression()
+            else:
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+
+        self._compiled_tokens.append(self._current_token)  # statement terminator
+        self._compiled_tokens.append(LET_END)
+        self.advance_token()
 
     def compile_if(self, /) -> None:
         raise NotImplementedError
@@ -142,7 +187,24 @@ class CompilationEngine:
         raise NotImplementedError
 
     def compile_expression(self, /) -> None:
-        raise NotImplementedError
+        """Compiles an expression according to `expression` grammar
+
+        `expression`: `term` (`op term`)*
+        """
+
+        # Always starts with a term
+        self.compile_term()
+        self.advance_token()
+
+        # If the next token is an op, we continue to compile `op term`
+        # and repeat until we run out of instances of (`op term`)
+        while is_op(self._current_token):
+            # Compile the `op`
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # Compile the `term`
+            self.compile_term()
+            self.advance_token()
 
     def compile_term(self, /) -> None:
         raise NotImplementedError
@@ -151,37 +213,18 @@ class CompilationEngine:
         raise NotImplementedError
 
 
-def compile_class(token_file: str) -> None:
-    """Write the full class.  In Jack all files are also classes,
-    so we should be able to just write the opener and closer without actually analyzing what starts/ends the file
-    and then let the other functions/methods handle their respective parts of the grammar
+# Maybe these should be in a separate module?
+# Don't need to be in the class, as they don't need the state
+def is_op(token: str) -> bool:
+    """Return true if the passed token is an op
+
+    `op`: `'+'`|`'-'`|`'*'`|`'/'`|`'&'`|`'|'`|`'<'`|`'>'`|`'='`
 
     Args:
-        `token_file` (str): A token file contain all of the class's tokens
+        `token` (str): The token in the format `<symbol> token </symbol>`
+
+    Returns:
+        `bool`: If the token is an op
     """
 
-    with open(token_file, "r", encoding="UTF-8") as reader, open(
-        token_file.replace("T.xml", ".xml"), "w", encoding="UTF-8"
-    ) as writer:
-        writer.write("<class>\n")
-
-        # Skip the first line because it is guaranteed to be "<tokens>"
-        # Next 3 lines are guaranteed? to be "class", className
-        # , and symbol opener, so just write those also?
-
-        next(reader)  # skip class declaration
-        class_name = reader.readline()
-        next(reader)  # skip '{'
-        writer.write(f"{class_name}\n<symbol> {{ </symbol>")
-
-        current_token = reader.readline()
-
-        while current_token != EO_TOKEN_FILE:
-            # Handle keywords
-            if current_token.startswith("<keyword>"):
-                writer.write(current_token)
-            # TODO: Analyze and write program parts
-            current_token = reader.readline()
-
-        # We're done parsing this file, close the class and exit the function
-        writer.write("</class>")
+    return token.split()[1] in OPS

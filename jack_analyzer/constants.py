@@ -10,6 +10,10 @@ TOKEN_TEMPLATE = "<{token_type}> {token} </{token_type}>\n"
 VAR_DEC_START = "<varDec>\n"
 VAR_DEC_END = "</varDec>\n"
 STATEMENT_TERMINATOR = "<symbol> ; </symbol>\n"
+LET_START = "<letStatement>\n"
+LET_END = "</letStatement>\n"
+TERM_START = "<term>\n"
+TERM_END = "</term>\n"
 
 KEYWORDS = {
     "class",
@@ -35,6 +39,8 @@ KEYWORDS = {
     "this",
 }
 
+OPS = {"+", "-", "*", "/", "&", "|", "<", ">", "="}
+
 SYMBOLS = {
     "{",
     "}",
@@ -45,14 +51,6 @@ SYMBOLS = {
     ".",
     ",",
     ";",
-    "+",
-    "-",
-    "*",
-    "/",
-    "&",
-    "|",
-    "<",
-    ">",
-    "=",
     "~",
+    *OPS,
 }

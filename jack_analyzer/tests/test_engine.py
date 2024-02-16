@@ -7,7 +7,7 @@ from collections import deque
 from pytest import fixture
 
 from compilation_engine import CompilationEngine
-from constants import VAR_DEC_START, VAR_DEC_END
+from constants import VAR_DEC_START, VAR_DEC_END, TERM_START, TERM_END
 
 
 @fixture
@@ -68,6 +68,29 @@ def var_dec_long():
 
 
 @fixture
+def expression_tokens():
+    """As in `let i = 1 + 2;`"""
+    return [
+        "<integerConstant> 1 </integerConstant>\n",
+        "<symbol> + </symbol>\n",
+        "<integerConstant> 2 </integerConstant>\n"
+    ]
+
+@fixture
+def compiled_expression():
+    return [
+        "<expression>\n",
+        TERM_START,
+        "<integerConstant> 1 </integerConstant>\n",
+        TERM_END,
+        "<symbol> + </symbol>\n",
+        TERM_START,
+        "<integerConstant> 2 </integerConstant>\n",
+        TERM_END,
+        "</expression>\n"
+    ]
+
+@fixture
 def engine(tokens) -> CompilationEngine:
     return CompilationEngine("test", tokens)
 
@@ -100,3 +123,8 @@ def test_compile_var_dec_long(var_dec_long, compiled_var_dec_long) -> None:
     engine = CompilationEngine("test", var_dec_long)
     engine.compile_var_dec()
     assert engine._compiled_tokens == compiled_var_dec_long
+
+def test_expression(expression_tokens, compiled_expression) -> None:
+    engine = CompilationEngine("test", expression_tokens)
+    engine.compile_expression()
+    assert engine._compiled_tokens == compiled_expression
