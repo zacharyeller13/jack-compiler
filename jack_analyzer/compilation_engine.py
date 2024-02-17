@@ -186,7 +186,7 @@ class CompilationEngine:
     def compile_return(self, /) -> None:
         raise NotImplementedError
 
-    def compile_expression(self, /) -> None:
+    def compile_expression(self) -> None:
         """Compiles an expression according to `expression` grammar
 
         `expression`: `term` (`op term`)*
@@ -206,7 +206,18 @@ class CompilationEngine:
             self.compile_term()
             self.advance_token()
 
-    def compile_term(self, /) -> None:
+    def compile_term(self) -> None:
+        """Compiles a term according to `term` grammar
+
+        `term`: `integerConstant` | `stringConstant` | `keywordConstant` | `varName` | `varName'[' expression ']'` |
+          `subroutineCall` | `'(' expression ')'` | `unaryOp term`
+        """
+        
+        # TODO: If is identifier, distinguish between variable, array entry, subroutine call
+        # if not identifier
+        # compile, advance, return
+        # else (is identifier)
+        # lookahead, compile accordingly
         raise NotImplementedError
 
     def compile_expression_list(self, /) -> None:
@@ -228,3 +239,16 @@ def is_op(token: str) -> bool:
     """
 
     return token.split()[1] in OPS
+
+
+def is_identifier(token: str) -> bool:
+    """Return true if passed token is an identifier
+
+    Args:
+        `token` (str): The token in the format `<identifier> token </identifier>`
+
+    Returns:
+        `bool`: If the token is an identifier
+    """
+
+    return token.split()[0] == "<identifier>"

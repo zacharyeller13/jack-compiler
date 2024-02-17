@@ -73,8 +73,9 @@ def expression_tokens():
     return [
         "<integerConstant> 1 </integerConstant>\n",
         "<symbol> + </symbol>\n",
-        "<integerConstant> 2 </integerConstant>\n"
+        "<integerConstant> 2 </integerConstant>\n",
     ]
+
 
 @fixture
 def compiled_expression():
@@ -87,8 +88,9 @@ def compiled_expression():
         TERM_START,
         "<integerConstant> 2 </integerConstant>\n",
         TERM_END,
-        "</expression>\n"
+        "</expression>\n",
     ]
+
 
 @fixture
 def engine(tokens) -> CompilationEngine:
@@ -123,6 +125,7 @@ def test_compile_var_dec_long(var_dec_long, compiled_var_dec_long) -> None:
     engine = CompilationEngine("test", var_dec_long)
     engine.compile_var_dec()
     assert engine._compiled_tokens == compiled_var_dec_long
+
 
 def test_expression(expression_tokens, compiled_expression) -> None:
     engine = CompilationEngine("test", expression_tokens)
