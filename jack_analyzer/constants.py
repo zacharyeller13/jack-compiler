@@ -14,6 +14,8 @@ LET_START = "<letStatement>\n"
 LET_END = "</letStatement>\n"
 TERM_START = "<term>\n"
 TERM_END = "</term>\n"
+EXPRESSION_START = "<expression>\n"
+EXPRESSION_END = "</expression>\n"
 
 KEYWORDS = {
     "class",

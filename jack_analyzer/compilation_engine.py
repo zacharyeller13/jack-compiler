@@ -12,8 +12,12 @@ import html
 
 from constants import (
     EO_TOKEN_FILE,
+    EXPRESSION_END,
+    EXPRESSION_START,
     OPS,
     STATEMENT_TERMINATOR,
+    TERM_END,
+    TERM_START,
     VAR_DEC_START,
     VAR_DEC_END,
     LET_START,
@@ -192,9 +196,10 @@ class CompilationEngine:
         `expression`: `term` (`op term`)*
         """
 
+        self._compiled_tokens.append(EXPRESSION_START)
+
         # Always starts with a term
         self.compile_term()
-        self.advance_token()
 
         # If the next token is an op, we continue to compile `op term`
         # and repeat until we run out of instances of (`op term`)
@@ -202,9 +207,10 @@ class CompilationEngine:
             # Compile the `op`
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
-            # Compile the `term`
+            # Compile the `term`, which includes advancing
             self.compile_term()
-            self.advance_token()
+
+        self._compiled_tokens.append(EXPRESSION_END)
 
     def compile_term(self) -> None:
         """Compiles a term according to `term` grammar
@@ -212,13 +218,23 @@ class CompilationEngine:
         `term`: `integerConstant` | `stringConstant` | `keywordConstant` | `varName` | `varName'[' expression ']'` |
           `subroutineCall` | `'(' expression ')'` | `unaryOp term`
         """
-        
+
         # TODO: If is identifier, distinguish between variable, array entry, subroutine call
         # if not identifier
         # compile, advance, return
+        if not is_identifier(self._current_token):
+            # integerConstant, stringConstant, keywordConstant
+            self._compiled_tokens.append(TERM_START)
+            self._compiled_tokens.append(self._current_token)
+            self._compiled_tokens.append(TERM_END)
+            self.advance_token()
+            return
+
         # else (is identifier)
         # lookahead, compile accordingly
-        raise NotImplementedError
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        return
 
     def compile_expression_list(self, /) -> None:
         raise NotImplementedError
@@ -237,6 +253,10 @@ def is_op(token: str) -> bool:
     Returns:
         `bool`: If the token is an op
     """
+    
+    # If we have an empty string
+    if not token:
+        return False
 
     return token.split()[1] in OPS
 

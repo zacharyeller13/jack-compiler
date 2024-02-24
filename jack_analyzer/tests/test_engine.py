@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import deque
 from pytest import fixture
 
-from compilation_engine import CompilationEngine
+from compilation_engine import CompilationEngine, is_op
 from constants import VAR_DEC_START, VAR_DEC_END, TERM_START, TERM_END
 
 
@@ -79,17 +79,29 @@ def expression_tokens():
 
 @fixture
 def compiled_expression():
-    return [
-        "<expression>\n",
-        TERM_START,
-        "<integerConstant> 1 </integerConstant>\n",
-        TERM_END,
-        "<symbol> + </symbol>\n",
-        TERM_START,
-        "<integerConstant> 2 </integerConstant>\n",
-        TERM_END,
-        "</expression>\n",
-    ]
+    return deque(
+        [
+            "<expression>\n",
+            TERM_START,
+            "<integerConstant> 1 </integerConstant>\n",
+            TERM_END,
+            "<symbol> + </symbol>\n",
+            TERM_START,
+            "<integerConstant> 2 </integerConstant>\n",
+            TERM_END,
+            "</expression>\n",
+        ]
+    )
+
+
+@fixture
+def term_non_identifier():
+    return ["<integerConstant> 1 </integerConstant>\n"]
+
+
+@fixture
+def compiled_term_non_identifier():
+    return deque([TERM_START, "<integerConstant> 1 </integerConstant>\n", TERM_END])
 
 
 @fixture
@@ -127,7 +139,18 @@ def test_compile_var_dec_long(var_dec_long, compiled_var_dec_long) -> None:
     assert engine._compiled_tokens == compiled_var_dec_long
 
 
+# Currently fails, b/c not fulling implemented
 def test_expression(expression_tokens, compiled_expression) -> None:
     engine = CompilationEngine("test", expression_tokens)
     engine.compile_expression()
     assert engine._compiled_tokens == compiled_expression
+
+
+def test_is_op() -> None:
+    assert is_op("<symbol> + </symbol>\n")
+
+
+def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) -> None:
+    engine = CompilationEngine("test", term_non_identifier)
+    engine.compile_term()
+    assert engine._compiled_tokens == compiled_term_non_identifier
