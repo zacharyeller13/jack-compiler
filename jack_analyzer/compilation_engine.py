@@ -167,8 +167,11 @@ class CompilationEngine:
                 "<symbol> = </symbol>\n",
                 "<symbol> [ </symbol>\n",
             ):
+                # append '=' or '['
                 self._compiled_tokens.append(self._current_token)
                 self.advance_token()
+                # append right side after '='
+                # or append the expression between '[' and ']'
                 self.compile_expression()
             else:
                 self._compiled_tokens.append(self._current_token)
@@ -253,7 +256,7 @@ def is_op(token: str) -> bool:
     Returns:
         `bool`: If the token is an op
     """
-    
+
     # If we have an empty string
     if not token:
         return False

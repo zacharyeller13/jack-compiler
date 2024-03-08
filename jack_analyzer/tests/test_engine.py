@@ -7,7 +7,17 @@ from collections import deque
 from pytest import fixture
 
 from compilation_engine import CompilationEngine, is_op
-from constants import VAR_DEC_START, VAR_DEC_END, TERM_START, TERM_END
+from constants import (
+    EXPRESSION_END,
+    EXPRESSION_START,
+    LET_END,
+    LET_START,
+    STATEMENT_TERMINATOR,
+    VAR_DEC_START,
+    VAR_DEC_END,
+    TERM_START,
+    TERM_END,
+)
 
 
 @fixture
@@ -105,6 +115,43 @@ def compiled_term_non_identifier():
 
 
 @fixture
+def let_statement_array_accessor():
+    # let arr[i] = 1;
+    return [
+        "<keyword> let </keyword>\n",
+        "<identifier> arr </identifier>\n",
+        "<symbol> [ </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> ] </symbol>\n",
+        "<symbol> = </symbol>\n",
+        "<integerConstant> 1 </integerConstant>\n",
+        STATEMENT_TERMINATOR
+    ]
+
+@fixture
+def compiled_let_statement_array_accessor():
+    # let arr[i] = 1;
+    return deque([
+        LET_START,
+        "<keyword> let </keyword>\n",
+        "<identifier> arr </identifier>\n",
+        "<symbol> [ </symbol>\n",
+        EXPRESSION_START,
+        "<identifier> i </identifier>\n",
+        EXPRESSION_END,
+        "<symbol> ] </symbol>\n",
+        "<symbol> = </symbol>\n",
+        EXPRESSION_START,
+        TERM_START,
+        "<integerConstant> 1 </integerConstant>\n",
+        TERM_END,
+        EXPRESSION_END,
+        STATEMENT_TERMINATOR,
+        LET_END
+    ])
+
+
+@fixture
 def engine(tokens) -> CompilationEngine:
     return CompilationEngine("test", tokens)
 
@@ -139,7 +186,6 @@ def test_compile_var_dec_long(var_dec_long, compiled_var_dec_long) -> None:
     assert engine._compiled_tokens == compiled_var_dec_long
 
 
-# Currently fails, b/c not fulling implemented
 def test_expression(expression_tokens, compiled_expression) -> None:
     engine = CompilationEngine("test", expression_tokens)
     engine.compile_expression()
@@ -154,3 +200,9 @@ def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) 
     engine = CompilationEngine("test", term_non_identifier)
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_non_identifier
+
+
+def test_let_statement(let_statement_array_accessor, compiled_let_statement_array_accessor):
+    engine = CompilationEngine("test", let_statement_array_accessor)
+    engine.compile_let()
+    assert engine._compiled_tokens == compiled_let_statement_array_accessor
