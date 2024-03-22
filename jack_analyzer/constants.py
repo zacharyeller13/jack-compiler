@@ -18,6 +18,8 @@ EXPRESSION_START = "<expression>\n"
 EXPRESSION_END = "</expression>\n"
 RETURN_START = "<returnStatement>\n"
 RETURN_END = "</returnStatement>\n"
+DO_START = "<doStatement>\n"
+DO_END = "</doStatement>\n"
 
 KEYWORDS = {
     "class",

@@ -8,10 +8,10 @@ from __future__ import annotations
 from collections import deque
 from typing import Callable, Iterable, Optional
 
-import html
 
 from constants import (
-    EO_TOKEN_FILE,
+    DO_END,
+    DO_START,
     EXPRESSION_END,
     EXPRESSION_START,
     OPS,
@@ -190,7 +190,21 @@ class CompilationEngine:
         raise NotImplementedError
 
     def compile_do(self, /) -> None:
-        raise NotImplementedError
+        """Compiles a do statement according to the grammar
+
+        `do` subroutineCall `';'`
+        """
+
+        self._compiled_tokens.append(DO_START)
+        # <keyword> do </keyword>
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # TODO: Compile subroutine call
+
+        # We should now be at the ';'
+        self._compiled_tokens.append(self._current_token)
+        self._compiled_tokens.append(DO_END)
+        self.advance_token()
 
     def compile_return(self, /) -> None:
         """Compiles a return statement according to the grammar
@@ -259,6 +273,12 @@ class CompilationEngine:
         return
 
     def compile_expression_list(self, /) -> None:
+        """Compile an expression list which really only happens in a `subroutineCall`
+
+        (`expression`(`','expression`)*)?
+        """
+
+        # TODO: compile expresssion list
         raise NotImplementedError
 
 
