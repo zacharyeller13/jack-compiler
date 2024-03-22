@@ -4,6 +4,7 @@ Module with helper functions to parse and tokenize a .jack file
 Should ignore newlines, spaces, and comments and then parse the remaining
 pieces of a file into valid Jack tokens
 """
+
 from __future__ import annotations
 from collections import deque
 

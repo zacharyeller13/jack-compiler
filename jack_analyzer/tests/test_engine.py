@@ -125,35 +125,43 @@ def let_statement_array_accessor():
         "<symbol> ] </symbol>\n",
         "<symbol> = </symbol>\n",
         "<integerConstant> 1 </integerConstant>\n",
-        STATEMENT_TERMINATOR
+        STATEMENT_TERMINATOR,
     ]
+
 
 @fixture
 def compiled_let_statement_array_accessor():
     # let arr[i] = 1;
-    return deque([
-        LET_START,
-        "<keyword> let </keyword>\n",
-        "<identifier> arr </identifier>\n",
-        "<symbol> [ </symbol>\n",
-        EXPRESSION_START,
-        "<identifier> i </identifier>\n",
-        EXPRESSION_END,
-        "<symbol> ] </symbol>\n",
-        "<symbol> = </symbol>\n",
-        EXPRESSION_START,
-        TERM_START,
-        "<integerConstant> 1 </integerConstant>\n",
-        TERM_END,
-        EXPRESSION_END,
-        STATEMENT_TERMINATOR,
-        LET_END
-    ])
+    return deque(
+        [
+            LET_START,
+            "<keyword> let </keyword>\n",
+            "<identifier> arr </identifier>\n",
+            "<symbol> [ </symbol>\n",
+            EXPRESSION_START,
+            "<identifier> i </identifier>\n",
+            EXPRESSION_END,
+            "<symbol> ] </symbol>\n",
+            "<symbol> = </symbol>\n",
+            EXPRESSION_START,
+            TERM_START,
+            "<integerConstant> 1 </integerConstant>\n",
+            TERM_END,
+            EXPRESSION_END,
+            STATEMENT_TERMINATOR,
+            LET_END,
+        ]
+    )
 
 
 @fixture
 def engine(tokens) -> CompilationEngine:
     return CompilationEngine("test", tokens)
+
+
+@fixture
+def test_return_statement():
+    return ["<keyword> return </keyword>\n", "<symbol> ; </symbol>\n"]
 
 
 def test_constructor(tokens, engine) -> None:
@@ -163,7 +171,7 @@ def test_constructor(tokens, engine) -> None:
 
 
 def test_constructor_no_tokens(tokens) -> None:
-    engine = CompilationEngine("test", tokens=None, parse_func=lambda x: deque(tokens))
+    engine = CompilationEngine("test", tokens=None, parse_func=lambda _: deque(tokens))
     assert isinstance(engine, CompilationEngine)
     assert engine._tokens == deque(tokens[1:])
     assert engine._filename == "test"
@@ -202,7 +210,9 @@ def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) 
     assert engine._compiled_tokens == compiled_term_non_identifier
 
 
-def test_let_statement(let_statement_array_accessor, compiled_let_statement_array_accessor):
+def test_let_statement(
+    let_statement_array_accessor, compiled_let_statement_array_accessor
+):
     engine = CompilationEngine("test", let_statement_array_accessor)
     engine.compile_let()
     assert engine._compiled_tokens == compiled_let_statement_array_accessor

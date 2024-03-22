@@ -16,6 +16,8 @@ TERM_START = "<term>\n"
 TERM_END = "</term>\n"
 EXPRESSION_START = "<expression>\n"
 EXPRESSION_END = "</expression>\n"
+RETURN_START = "<returnStatement>\n"
+RETURN_END = "</returnStatement>\n"
 
 KEYWORDS = {
     "class",

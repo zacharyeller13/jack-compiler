@@ -15,6 +15,8 @@ from constants import (
     EXPRESSION_END,
     EXPRESSION_START,
     OPS,
+    RETURN_END,
+    RETURN_START,
     STATEMENT_TERMINATOR,
     TERM_END,
     TERM_START,
@@ -191,7 +193,24 @@ class CompilationEngine:
         raise NotImplementedError
 
     def compile_return(self, /) -> None:
-        raise NotImplementedError
+        """Compiles a return statement according to the grammar
+
+        `return`: `expression`? ';'
+        """
+
+        self._compiled_tokens.append(RETURN_START)
+        # <keyword> return </keyword>
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # This means we have an expression to compile
+        if self._current_token != STATEMENT_TERMINATOR:
+            self.compile_expression()
+
+        # We are now already at the ';'
+        self._compiled_tokens.append(self._current_token)
+        self._compiled_tokens.append(RETURN_END)
+        self.advance_token()
 
     def compile_expression(self) -> None:
         """Compiles an expression according to `expression` grammar
@@ -222,7 +241,6 @@ class CompilationEngine:
           `subroutineCall` | `'(' expression ')'` | `unaryOp term`
         """
 
-        # TODO: If is identifier, distinguish between variable, array entry, subroutine call
         # if not identifier
         # compile, advance, return
         if not is_identifier(self._current_token):
@@ -233,6 +251,7 @@ class CompilationEngine:
             self.advance_token()
             return
 
+        # TODO: If is identifier, distinguish between variable, array entry, subroutine call
         # else (is identifier)
         # lookahead, compile accordingly
         self._compiled_tokens.append(self._current_token)
