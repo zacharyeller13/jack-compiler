@@ -216,3 +216,41 @@ def test_let_statement(
     engine = CompilationEngine("test", let_statement_array_accessor)
     engine.compile_let()
     assert engine._compiled_tokens == compiled_let_statement_array_accessor
+
+@fixture
+def expression_list_tokens() -> list[str]:
+    return [
+        "<symbol> ( </symbol>\n",
+        "<integerConstant> 2 </integerConstant>\n",
+        "<symbol> , </symbol>\n",
+        "<identifier> x </identifier>\n",
+        "<symbol> ) </symbol>\n",
+    ]
+
+@fixture
+def compiled_expression_list_tokens() -> list[str]:
+    return deque([
+        "<symbol> ( </symbol>\n",
+        "<expressionList>\n",
+        "<expression>\n",
+        "<term>\n",
+        "<integerConstant> 2 </integerConstant>\n",
+        "</term>\n",
+        "</expression>\n",
+        "<symbol> , </symbol>\n",
+        "<expression>\n",
+        "<term>\n",
+        "<identifier> x </identifier>\n",
+        "</term>\n",
+        "</expression>\n",
+        "</expressionList>\n",
+        "<symbol> ) </symbol>\n",
+    ])
+
+# Currently fails because the is_identifier/lookahead for
+# variable, array access, subroutine call
+def test_expression_list(expression_list_tokens, compiled_expression_list_tokens) -> None:
+    engine = CompilationEngine("test", expression_list_tokens)
+    engine.compile_expression_list()
+    assert engine._compiled_tokens == compiled_expression_list_tokens
+

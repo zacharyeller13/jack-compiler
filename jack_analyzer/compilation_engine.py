@@ -24,6 +24,9 @@ from constants import (
     VAR_DEC_END,
     LET_START,
     LET_END,
+    CLOSE_PAREN,
+    EXPRESSION_LIST_START,
+    EXPRESSION_LIST_END,
 )
 
 from tokenizer import parse_file
@@ -189,17 +192,31 @@ class CompilationEngine:
     def compile_while(self, /) -> None:
         raise NotImplementedError
 
-    def compile_do(self, /) -> None:
+    def compile_do(self) -> None:
         """Compiles a do statement according to the grammar
 
         `do` subroutineCall `';'`
         """
 
+        # <doStatement>
         self._compiled_tokens.append(DO_START)
         # <keyword> do </keyword>
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
+
         # TODO: Compile subroutine call
+        # identifier(.identifier)?(expressionList)
+        # identifier
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # .identifier
+        if self._current_token == "<symbol> . </symbol>":
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        self.compile_expression_list()
 
         # We should now be at the ';'
         self._compiled_tokens.append(self._current_token)
@@ -272,14 +289,31 @@ class CompilationEngine:
         self.advance_token()
         return
 
-    def compile_expression_list(self, /) -> None:
+    def compile_expression_list(self) -> None:
         """Compile an expression list which really only happens in a `subroutineCall`
 
         (`expression`(`','expression`)*)?
         """
 
-        # TODO: compile expresssion list
-        raise NotImplementedError
+        # ( Open Paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # expression(s)
+        self._compiled_tokens.append(EXPRESSION_LIST_START)
+        # while we're still inside the parens
+        while self._current_token != CLOSE_PAREN:
+            if self._current_token == "<symbol> , </symbol>\n":
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+
+            self.compile_expression()
+
+        self._compiled_tokens.append(EXPRESSION_LIST_END)
+
+        # ) Close paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
 
 
 # Maybe these should be in a separate module?
