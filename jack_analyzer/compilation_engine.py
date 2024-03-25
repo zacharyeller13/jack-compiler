@@ -14,6 +14,7 @@ from constants import (
     DO_START,
     EXPRESSION_END,
     EXPRESSION_START,
+    OPEN_PAREN,
     OPS,
     RETURN_END,
     RETURN_START,
@@ -204,12 +205,12 @@ class CompilationEngine:
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
-        # TODO: Compile subroutine call
+        # Compile subroutine call
         # identifier(.identifier)?(expressionList)
         # identifier
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
-        # .identifier
+        # .identifier?
         if self._current_token == "<symbol> . </symbol>":
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
@@ -282,11 +283,47 @@ class CompilationEngine:
             self.advance_token()
             return
 
-        # TODO: If is identifier, distinguish between variable, array entry, subroutine call
-        # else (is identifier)
-        # lookahead, compile accordingly
-        self._compiled_tokens.append(self._current_token)
-        self.advance_token()
+        # If is identifier, distinguish between variable, array entry, subroutine call
+        # lookahead, compile variable, array access, subroutine call accordingly
+        # This is repeating the same process for access and call - maybe refactor
+        self._compiled_tokens.append(TERM_START)
+        # peek at next token
+        next_token = self._tokens[0]
+        # array access
+        if next_token == "<symbol> [ </symbol>\n":
+            # identifier
+            self._compiled_tokens.append(self._current_token)
+            # advance to '[' compile and advance
+            self.advance_token()
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # now compile the expression inside of '[' and ']'
+            self.compile_expression()
+            # compile ending ']'
+            self._compiled_tokens.append(self._current_token)
+            assert self._current_token == "<symbol> ] </symbol>\n"
+            self.advance_token()
+        # subroutine call
+        elif next_token == OPEN_PAREN:
+            # identifier
+            self._compiled_tokens.append(self._current_token)
+            # advance to '(' compile and advance
+            self.advance_token()
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # now compile the expression inside of '(' and ')'
+            self.compile_expression()
+            # compile ending ')'
+            self._compiled_tokens.append(self._current_token)
+            assert self._current_token == CLOSE_PAREN
+            self.advance_token()
+
+        # normal variable base case
+        else:
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        self._compiled_tokens.append(TERM_END)
         return
 
     def compile_expression_list(self) -> None:
