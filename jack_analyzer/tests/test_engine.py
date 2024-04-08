@@ -219,6 +219,7 @@ def test_let_statement(
     engine.compile_let()
     assert engine._compiled_tokens == compiled_let_statement_array_accessor
 
+
 @fixture
 def expression_list_tokens() -> list[str]:
     return [
@@ -229,30 +230,114 @@ def expression_list_tokens() -> list[str]:
         "<symbol> ) </symbol>\n",
     ]
 
+
 @fixture
 def compiled_expression_list_tokens() -> list[str]:
-    return deque([
-        "<symbol> ( </symbol>\n",
-        "<expressionList>\n",
-        "<expression>\n",
-        "<term>\n",
-        "<integerConstant> 2 </integerConstant>\n",
-        "</term>\n",
-        "</expression>\n",
-        "<symbol> , </symbol>\n",
-        "<expression>\n",
-        "<term>\n",
-        "<identifier> x </identifier>\n",
-        "</term>\n",
-        "</expression>\n",
-        "</expressionList>\n",
-        "<symbol> ) </symbol>\n",
-    ])
+    return deque(
+        [
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<integerConstant> 2 </integerConstant>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> , </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> x </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+        ]
+    )
 
-# Currently fails because the is_identifier/lookahead for
-# variable, array access, subroutine call
-def test_expression_list(expression_list_tokens, compiled_expression_list_tokens) -> None:
+
+def test_expression_list(
+    expression_list_tokens, compiled_expression_list_tokens
+) -> None:
     engine = CompilationEngine("test", expression_list_tokens)
     engine.compile_expression_list()
     assert engine._compiled_tokens == compiled_expression_list_tokens
+
+
+@fixture
+def statements() -> list[str]:
+    return [
+        "<keyword> let </keyword>\n",
+        "<identifier> game </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> game </identifier>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> do </keyword>\n",
+        "<identifier> game </identifier>\n",
+        "<symbol> . </symbol>\n",
+        "<identifier> run </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> do </keyword>\n",
+        "<identifier> game </identifier>\n",
+        "<symbol> . </symbol>\n",
+        "<identifier> dispose </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> return </keyword>\n",
+        "<symbol> ; </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_statements():
+    return deque(
+        [
+            "<statements>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> game </identifier>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> game </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "<doStatement>\n",
+            "<keyword> do </keyword>\n",
+            "<identifier> game </identifier>\n",
+            "<symbol> . </symbol>\n",
+            "<identifier> run </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> ; </symbol>\n",
+            "</doStatement>\n",
+            "<doStatement>\n",
+            "<keyword> do </keyword>\n",
+            "<identifier> game </identifier>\n",
+            "<symbol> . </symbol>\n",
+            "<identifier> dispose </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> ; </symbol>\n",
+            "</doStatement>\n",
+            "<returnStatement>\n",
+            "<keyword> return </keyword>\n",
+            "<symbol> ; </symbol>\n",
+            "</returnStatement>\n",
+            "</statements>\n",
+        ]
+    )
+
+def test_compile_statements(statements, compiled_statements) -> None:
+    engine = CompilationEngine("test", tokens=statements)
+    engine.compile_statements()
+    assert engine._compiled_tokens == compiled_statements
 

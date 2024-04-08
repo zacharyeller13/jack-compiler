@@ -22,6 +22,8 @@ DO_START = "<doStatement>\n"
 DO_END = "</doStatement>\n"
 OPEN_PAREN = "<symbol> ( </symbol>\n"
 CLOSE_PAREN = "<symbol> ) </symbol>\n"
+OPEN_BRACE = "<symbol> { </symbol>\n"
+CLOSE_BRACE = "<symbol> } </symbol>\n"
 EXPRESSION_LIST_START = "<expressionList>\n"
 EXPRESSION_LIST_END = "</expressionList>\n"
 

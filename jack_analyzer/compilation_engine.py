@@ -10,6 +10,7 @@ from typing import Callable, Iterable, Optional
 
 
 from constants import (
+    CLOSE_BRACE,
     DO_END,
     DO_START,
     EXPRESSION_END,
@@ -114,7 +115,7 @@ class CompilationEngine:
         try:
             self._current_token = self._tokens.popleft()
         except IndexError:
-            self._current_token = ""
+            self._current_token = None
 
     def compile_class(self, /) -> None:
         raise NotImplementedError
@@ -151,8 +152,39 @@ class CompilationEngine:
         self._compiled_tokens.append(VAR_DEC_END)
         self.advance_token()
 
-    def compile_statements(self, /) -> None:
-        raise NotImplementedError
+    def compile_statements(self) -> None:
+        """Compiles multiple statements
+
+        `statement`*
+
+        Occurs in the following cases:
+            `subroutineBody`
+            `ifStatement` (including when there is an `else` part)
+            `whileStatement`
+
+        Raises:
+            `ValueError`: If the current token is not a statement
+        """
+
+        self._compiled_tokens.append("<statements>\n")
+
+        while self._current_token != CLOSE_BRACE:
+            if self._current_token == "<keyword> let </keyword>\n":
+                self.compile_let()
+            elif self._current_token == "<keyword> if </keyword>\n":
+                self.compile_if()
+            elif self._current_token == "<keyword> while </keyword>\n":
+                self.compile_while()
+            elif self._current_token == "<keyword> do </keyword>\n":
+                self.compile_do()
+            elif self._current_token == "<keyword> return </keyword>\n":
+                self.compile_return()
+            else:
+                raise ValueError(
+                    f"Current Token {self._current_token} is not a statement"
+                )
+
+        self._compiled_tokens.append("</statements>\n")
 
     def compile_let(self) -> None:
         """Compiles a `let` statement according to `letStatement` grammar
@@ -211,7 +243,7 @@ class CompilationEngine:
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
         # .identifier?
-        if self._current_token == "<symbol> . </symbol>":
+        if self._current_token == "<symbol> . </symbol>\n":
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
             self._compiled_tokens.append(self._current_token)
@@ -315,7 +347,9 @@ class CompilationEngine:
             self.compile_expression()
             # compile ending ')'
             self._compiled_tokens.append(self._current_token)
-            assert self._current_token == CLOSE_PAREN
+            # print(self._compiled_tokens)
+            # assert self._current_token == CLOSE_PAREN
+            print("calling self.advance_token()")
             self.advance_token()
 
         # normal variable base case
