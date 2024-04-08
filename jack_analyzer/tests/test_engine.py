@@ -211,6 +211,28 @@ def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) 
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_non_identifier
 
+@fixture
+def term_unary_op():
+    return [
+        "<symbol> ~ </symbol>\n",
+        "<identifier> a </identifier>\n",
+    ]
+
+@fixture
+def compiled_term_unary_op():
+    return deque([
+        "<term>\n",
+        "<symbol> ~ </symbol>\n",
+        "<term>\n",
+        "<identifier> a </identifier>\n",
+        "</term>\n",
+        "</term>\n",
+    ])
+
+def test_term_unary_op(term_unary_op, compiled_term_unary_op) -> None:
+    engine = CompilationEngine("test", term_unary_op)
+    engine.compile_term()
+    assert engine._compiled_tokens == compiled_term_unary_op
 
 def test_let_statement(
     let_statement_array_accessor, compiled_let_statement_array_accessor

@@ -117,6 +117,18 @@ class CompilationEngine:
         except IndexError:
             self._current_token = None
 
+    def peek_next_token(self) -> str | None:
+        """Peek to the next token
+
+        Returns:
+            `str` | `None`: The token if there is one, None is the queue is empty
+        """
+
+        try:
+            return self._tokens[0]
+        except IndexError:
+            return None
+
     def compile_class(self, /) -> None:
         raise NotImplementedError
 
@@ -310,7 +322,13 @@ class CompilationEngine:
         if not is_identifier(self._current_token):
             # integerConstant, stringConstant, keywordConstant
             self._compiled_tokens.append(TERM_START)
-            self._compiled_tokens.append(self._current_token)
+            if self._current_token == "<symbol> ~ </symbol>\n":
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+                self.compile_term()
+            else:
+                self._compiled_tokens.append(self._current_token)
+
             self._compiled_tokens.append(TERM_END)
             self.advance_token()
             return
@@ -320,7 +338,7 @@ class CompilationEngine:
         # This is repeating the same process for access and call - maybe refactor
         self._compiled_tokens.append(TERM_START)
         # peek at next token
-        next_token = self._tokens[0]
+        next_token = self.peek_next_token()
         # array access
         if next_token == "<symbol> [ </symbol>\n":
             # identifier
@@ -352,7 +370,7 @@ class CompilationEngine:
             print("calling self.advance_token()")
             self.advance_token()
 
-        # normal variable base case
+        # normal variable
         else:
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
