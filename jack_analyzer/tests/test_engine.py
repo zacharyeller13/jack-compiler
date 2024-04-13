@@ -211,6 +211,7 @@ def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) 
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_non_identifier
 
+
 @fixture
 def term_unary_op():
     return [
@@ -218,21 +219,26 @@ def term_unary_op():
         "<identifier> a </identifier>\n",
     ]
 
+
 @fixture
 def compiled_term_unary_op():
-    return deque([
-        "<term>\n",
-        "<symbol> ~ </symbol>\n",
-        "<term>\n",
-        "<identifier> a </identifier>\n",
-        "</term>\n",
-        "</term>\n",
-    ])
+    return deque(
+        [
+            "<term>\n",
+            "<symbol> ~ </symbol>\n",
+            "<term>\n",
+            "<identifier> a </identifier>\n",
+            "</term>\n",
+            "</term>\n",
+        ]
+    )
+
 
 def test_term_unary_op(term_unary_op, compiled_term_unary_op) -> None:
     engine = CompilationEngine("test", term_unary_op)
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_unary_op
+
 
 def test_let_statement(
     let_statement_array_accessor, compiled_let_statement_array_accessor
@@ -358,8 +364,56 @@ def compiled_statements():
         ]
     )
 
+
 def test_compile_statements(statements, compiled_statements) -> None:
     engine = CompilationEngine("test", tokens=statements)
     engine.compile_statements()
     assert engine._compiled_tokens == compiled_statements
 
+
+@fixture
+def if_statement() -> list[str]:
+    return [
+        "<keyword> if </keyword>\n",
+        "<symbol> ( </symbol>\n",
+        "<identifier> b </identifier>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<symbol> } </symbol>\n",
+        "<keyword> else </keyword>\n",
+        "<symbol> { </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_if_statement() -> deque[str]:
+    return deque(
+        [
+            "<ifStatement>\n",
+            "<keyword> if </keyword>\n",
+            "<symbol> ( </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> b </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> { </symbol>\n",
+            "<statements>\n",
+            "</statements>\n",
+            "<symbol> } </symbol>\n",
+            "<keyword> else </keyword>\n",
+            "<symbol> { </symbol>\n",
+            "<statements>\n",
+            "</statements>\n",
+            "<symbol> } </symbol>\n",
+            "</ifStatement>\n",
+        ]
+    )
+
+
+def test_if_statement(if_statement, compiled_if_statement) -> None:
+    engine = CompilationEngine("test", tokens=if_statement)
+    engine.compile_if()
+    assert engine._compiled_tokens == compiled_if_statement

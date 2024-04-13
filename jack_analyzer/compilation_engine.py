@@ -13,8 +13,10 @@ from constants import (
     CLOSE_BRACE,
     DO_END,
     DO_START,
+    END_IF,
     EXPRESSION_END,
     EXPRESSION_START,
+    IF_STATEMENT,
     OPEN_PAREN,
     OPS,
     RETURN_END,
@@ -231,8 +233,55 @@ class CompilationEngine:
         self._compiled_tokens.append(LET_END)
         self.advance_token()
 
-    def compile_if(self, /) -> None:
-        raise NotImplementedError
+    def compile_if(self) -> None:
+        """Compiles an if statement according to the grammar
+
+        `if '(' expression ')' '{' statements '}' (else '{' statements '}')?`
+        """
+
+        if self._current_token != "<keyword> if </keyword>\n":
+            raise ValueError(f"{self._current_token} is not an if keyword")
+
+        # <ifStatement>
+        self._compiled_tokens.append(IF_STATEMENT)
+        # <keyword> if </keyword>
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # open paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # expression
+        self.compile_expression()
+        # close paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # open curly brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # statements
+        self.compile_statements()
+
+        # close curly brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # optional else statement
+        if self._current_token == "<keyword> else </keyword>\n":
+            # compile the else bit
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # open curly brace
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # statements
+            self.compile_statements()
+
+            # close curly brace
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        self._compiled_tokens.append(END_IF)
 
     def compile_while(self, /) -> None:
         raise NotImplementedError
@@ -351,7 +400,6 @@ class CompilationEngine:
             self.compile_expression()
             # compile ending ']'
             self._compiled_tokens.append(self._current_token)
-            assert self._current_token == "<symbol> ] </symbol>\n"
             self.advance_token()
         # subroutine call
         elif next_token == OPEN_PAREN:
@@ -366,7 +414,6 @@ class CompilationEngine:
             # compile ending ')'
             self._compiled_tokens.append(self._current_token)
             # print(self._compiled_tokens)
-            # assert self._current_token == CLOSE_PAREN
             print("calling self.advance_token()")
             self.advance_token()
 
