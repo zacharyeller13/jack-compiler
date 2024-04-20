@@ -173,11 +173,63 @@ class CompilationEngine:
         # /classVarDec
         self._compiled_tokens.append("</classVarDec>\n")
 
-    def compile_subroutine_dec(self, /) -> None:
-        raise NotImplementedError
+    def compile_subroutine_dec(self) -> None:
+        """Compile a subroutine declaration according to grammar:
+
+        `('constructor' | 'function' | 'method') ('void' | type) subroutineName
+        '(' parameterList ')' subroutineBody
+        """
+
+        self._compiled_tokens.append("<subroutineDec>\n")
+
+        # constructor/function/method
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # void/type
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # subroutineName
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # open paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self.compile_parameter_list()
+
+        # close paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self.compile_subroutine_body()
+
+        self._compiled_tokens.append("</subroutineDec>\n")
 
     def compile_parameter_list(self, /) -> None:
-        raise NotImplementedError
+        """Compile a subroutine's parameter list:
+
+        `( (type varName) (',' type varName)* )?`
+        """
+
+        self._compiled_tokens.append("<parameterList>\n")
+
+        while self._current_token != CLOSE_PAREN:
+            if self._current_token == "<symbol> , </symbol>\n":
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+
+            # type
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+            # varName
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        self._compiled_tokens.append("</parameterList>\n")
 
     def compile_subroutine_body(self) -> None:
         """Compile a subroutine body according to grammar:
@@ -252,7 +304,6 @@ class CompilationEngine:
             elif self._current_token == "<keyword> return </keyword>\n":
                 self.compile_return()
             else:
-                print(self._compiled_tokens)
                 raise ValueError(
                     f"Current Token {self._current_token} is not a statement"
                 )
@@ -432,7 +483,6 @@ class CompilationEngine:
             self.compile_expression()
 
         # We are now already at the ';'
-        print(self._current_token)
         self._compiled_tokens.append(self._current_token)
         self._compiled_tokens.append(RETURN_END)
         self.advance_token()

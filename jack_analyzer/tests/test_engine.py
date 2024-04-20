@@ -4,7 +4,7 @@ Tests for Compilation Engine
 
 from __future__ import annotations
 from collections import deque
-from pytest import fixture
+from pytest import deprecated_call, fixture
 
 from compilation_engine import CompilationEngine, is_op
 from constants import (
@@ -1060,3 +1060,209 @@ def test_class_var_dec(class_var_dec, compiled_class_var_dec) -> None:
     engine = CompilationEngine("test", tokens=class_var_dec)
     engine.compile_class_var_dec()
     assert engine._compiled_tokens == compiled_class_var_dec
+
+
+@fixture
+def subroutine_dec_no_parameters() -> list[str]:
+    return [
+        "<keyword> method </keyword>\n",
+        "<keyword> void </keyword>\n",
+        "<identifier> dispose </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<keyword> do </keyword>\n",
+        "<identifier> Memory </identifier>\n",
+        "<symbol> . </symbol>\n",
+        "<identifier> deAlloc </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<keyword> this </keyword>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> return </keyword>\n",
+        "<symbol> ; </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_dec_no_parameters() -> deque[str]:
+    return deque(
+        [
+            "<subroutineDec>\n",
+            "<keyword> method </keyword>\n",
+            "<keyword> void </keyword>\n",
+            "<identifier> dispose </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<parameterList>\n",
+            "</parameterList>\n",
+            "<symbol> ) </symbol>\n",
+            "<subroutineBody>\n",
+            "<symbol> { </symbol>\n",
+            "<statements>\n",
+            "<doStatement>\n",
+            "<keyword> do </keyword>\n",
+            "<identifier> Memory </identifier>\n",
+            "<symbol> . </symbol>\n",
+            "<identifier> deAlloc </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<keyword> this </keyword>\n",
+            "</term>\n",
+            "</expression>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> ; </symbol>\n",
+            "</doStatement>\n",
+            "<returnStatement>\n",
+            "<keyword> return </keyword>\n",
+            "<symbol> ; </symbol>\n",
+            "</returnStatement>\n",
+            "</statements>\n",
+            "<symbol> } </symbol>\n",
+            "</subroutineBody>\n",
+            "</subroutineDec>\n",
+        ]
+    )
+
+
+def test_subroutine_dec_no_parameters(
+    subroutine_dec_no_parameters, compiled_subroutine_dec_no_parameters
+) -> None:
+    engine = CompilationEngine("test", tokens=subroutine_dec_no_parameters)
+    engine.compile_subroutine_dec()
+    assert engine._compiled_tokens == compiled_subroutine_dec_no_parameters
+
+
+@fixture
+def subroutine_dec() -> list[str]:
+    return [
+        "<keyword> constructor </keyword>\n",
+        "<identifier> Square </identifier>\n",
+        "<identifier> new </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> Ax </identifier>\n",
+        "<symbol> , </symbol>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> Ay </identifier>\n",
+        "<symbol> , </symbol>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> Asize </identifier>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> x </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> Ax </identifier>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> y </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> Ay </identifier>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> size </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> Asize </identifier>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> do </keyword>\n",
+        "<identifier> draw </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> return </keyword>\n",
+        "<keyword> this </keyword>\n",
+        "<symbol> ; </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_dec() -> deque[str]:
+    return deque(
+        [
+            "<subroutineDec>\n",
+            "<keyword> constructor </keyword>\n",
+            "<identifier> Square </identifier>\n",
+            "<identifier> new </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<parameterList>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier> Ax </identifier>\n",
+            "<symbol> , </symbol>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier> Ay </identifier>\n",
+            "<symbol> , </symbol>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier> Asize </identifier>\n",
+            "</parameterList>\n",
+            "<symbol> ) </symbol>\n",
+            "<subroutineBody>\n",
+            "<symbol> { </symbol>\n",
+            "<statements>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> x </identifier>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> Ax </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> y </identifier>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> Ay </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> size </identifier>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> Asize </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "<doStatement>\n",
+            "<keyword> do </keyword>\n",
+            "<identifier> draw </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> ; </symbol>\n",
+            "</doStatement>\n",
+            "<returnStatement>\n",
+            "<keyword> return </keyword>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<keyword> this </keyword>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</returnStatement>\n",
+            "</statements>\n",
+            "<symbol> } </symbol>\n",
+            "</subroutineBody>\n",
+            "</subroutineDec>\n",
+        ]
+    )
+
+
+def test_subroutine_dec(subroutine_dec, compiled_subroutine_dec) -> None:
+    engine = CompilationEngine("test", tokens=subroutine_dec)
+    engine.compile_subroutine_dec()
+    assert engine._compiled_tokens == compiled_subroutine_dec
