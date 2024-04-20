@@ -149,7 +149,28 @@ class CompilationEngine:
         raise NotImplementedError
 
     def compile_subroutine_body(self, /) -> None:
-        raise NotImplementedError
+        """Compile a subroutine body according to grammar:
+
+        `'{' varDec* statements '}'`
+        """
+
+        self._compiled_tokens.append("<subroutineBody>\n")
+
+        # Compile open brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        while self._current_token != CLOSE_BRACE:
+            if self._current_token == "<keyword> var </keyword>\n":
+                self.compile_var_dec()
+            else:
+                self.compile_statements()
+
+        # Compile close brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self._compiled_tokens.append("</subroutineBody>\n")
 
     def compile_var_dec(self) -> None:
         """Compiles a `var` declaration according to the varDec grammar
@@ -158,6 +179,7 @@ class CompilationEngine:
 
         Will be called if `self._current_token` == `var` and we're in a subroutine body.
         """
+
         if self._current_token != "<keyword> var </keyword>\n":
             raise ValueError(f"{self._current_token} is not a var declaration")
 
