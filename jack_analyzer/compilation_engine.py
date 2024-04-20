@@ -107,6 +107,8 @@ class CompilationEngine:
             self._tokens = parse_func(filename)
 
         # Automatically set the first token
+        # We don't need to advance twice, b/c the first "token" will only be '<token>\n"
+        # when we write to a file.  Otherwise we just start with the first token
         self.advance_token()
 
         # Create a default queue of compiled items
@@ -136,8 +138,36 @@ class CompilationEngine:
         except IndexError:
             return None
 
-    def compile_class(self, /) -> None:
-        raise NotImplementedError
+    def compile_class(self) -> None:
+        """Compile a full class (basically the same as a whole file):
+
+        `'class' className '{' classVarDec* subroutineDec* '}'`
+        """
+
+        self._compiled_tokens.append("<class>\n")
+
+        # class name
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # open brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        while self._current_token != CLOSE_BRACE:
+            if self._current_token in (
+                "<keyword> static </keyword>\n",
+                "<keyword> field </keyword>\n",
+            ):
+                self.compile_class_var_dec()
+            else:
+                self.compile_subroutine_dec()
+
+        # close brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self._compiled_tokens.append("</class>\n")
 
     def compile_class_var_dec(self) -> None:
         """Compile class variable declarations according to grammar:
