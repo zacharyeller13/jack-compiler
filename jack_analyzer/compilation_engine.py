@@ -139,8 +139,39 @@ class CompilationEngine:
     def compile_class(self, /) -> None:
         raise NotImplementedError
 
-    def compile_class_var_dec(self, /) -> None:
-        raise NotImplementedError
+    def compile_class_var_dec(self) -> None:
+        """Compile class variable declarations according to grammar:
+
+        `('static'|'field') type varName (',' varName)* ';'`
+        """
+
+        # classVarDec
+        self._compiled_tokens.append("<classVarDec>\n")
+
+        # static or field
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # type
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # (',' varName)*
+        while self._current_token != STATEMENT_TERMINATOR:
+            # ,
+            if self._current_token == "<symbol> , </symbol>\n":
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+            # varName
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        # ;
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # /classVarDec
+        self._compiled_tokens.append("</classVarDec>\n")
 
     def compile_subroutine_dec(self, /) -> None:
         raise NotImplementedError
@@ -148,7 +179,7 @@ class CompilationEngine:
     def compile_parameter_list(self, /) -> None:
         raise NotImplementedError
 
-    def compile_subroutine_body(self, /) -> None:
+    def compile_subroutine_body(self) -> None:
         """Compile a subroutine body according to grammar:
 
         `'{' varDec* statements '}'`

@@ -1026,3 +1026,37 @@ def test_subroutine_body(subroutine_body, compiled_subroutine_body) -> None:
     engine = CompilationEngine("test", tokens=subroutine_body)
     engine.compile_subroutine_body()
     assert engine._compiled_tokens == compiled_subroutine_body
+
+
+@fixture
+def class_var_dec() -> list[str]:
+    return [
+        "<keyword> field </keyword>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> x </identifier>\n",
+        "<symbol> , </symbol>\n",
+        "<identifier> y </identifier>\n",
+        "<symbol> ; </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_class_var_dec() -> deque[str]:
+    return deque(
+        [
+            "<classVarDec>\n",
+            "<keyword> field </keyword>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier> x </identifier>\n",
+            "<symbol> , </symbol>\n",
+            "<identifier> y </identifier>\n",
+            "<symbol> ; </symbol>\n",
+            "</classVarDec>\n",
+        ]
+    )
+
+
+def test_class_var_dec(class_var_dec, compiled_class_var_dec) -> None:
+    engine = CompilationEngine("test", tokens=class_var_dec)
+    engine.compile_class_var_dec()
+    assert engine._compiled_tokens == compiled_class_var_dec
