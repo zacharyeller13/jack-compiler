@@ -102,6 +102,8 @@ class CompilationEngine:
                 `files` if tokens are not provided. (default: `parse_file` from `tokenizer`)
         """
 
+        # Setup our parsing function
+        self.parse_func = parse_func
         # Ensure self._files will always be an iterable
         self._files = deque([files]) if isinstance(files, str) else deque(files)
         # This is a little bit of extra work if a files is a string, but oh well
@@ -122,7 +124,21 @@ class CompilationEngine:
         self.advance_token()
 
     def compile_all(self) -> None:
-        """Do all compilation activities for every file in `_files`"""
+        """Do all compilation activities for every file in `_files` and
+        write to output file(s)
+        """
+
+        # We have already set the first batch of tokens so we just compile them
+        # They should always start with 'class'
+        self.compile_class()
+        self.write_compilation_file()
+        self._compiled_tokens.clear()
+
+        # Should exit when self._files == deque([])
+        while self._files:
+            self._current_filename = self._files.popleft()
+            self._tokens = self.parse_func(self._current_filename)
+            self.compile_class()
 
     def write_compilation_file(self) -> None:
         with open(f"{self._current_filename}.xml", "w", encoding="UTF-8") as f:
