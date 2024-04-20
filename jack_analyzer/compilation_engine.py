@@ -8,6 +8,8 @@ from __future__ import annotations
 from collections import deque
 from typing import Callable, Iterable, Optional
 
+import html
+import sys
 
 from constants import (
     CLOSE_BRACE,
@@ -17,6 +19,7 @@ from constants import (
     EXPRESSION_END,
     EXPRESSION_START,
     IF_STATEMENT,
+    MEMBER_ACCESSOR,
     OPEN_PAREN,
     OPS,
     RETURN_END,
@@ -31,6 +34,8 @@ from constants import (
     CLOSE_PAREN,
     EXPRESSION_LIST_START,
     EXPRESSION_LIST_END,
+    WHILE_END,
+    WHILE_START,
 )
 
 from tokenizer import parse_file
@@ -194,6 +199,7 @@ class CompilationEngine:
             elif self._current_token == "<keyword> return </keyword>\n":
                 self.compile_return()
             else:
+                print(self._compiled_tokens)
                 raise ValueError(
                     f"Current Token {self._current_token} is not a statement"
                 )
@@ -283,8 +289,40 @@ class CompilationEngine:
 
         self._compiled_tokens.append(END_IF)
 
-    def compile_while(self, /) -> None:
-        raise NotImplementedError
+    def compile_while(self) -> None:
+        """Compiles a while statement according to the grammar
+
+        `while '(' expression ')' '{' statements '}'`
+        """
+
+        # <whileStatement>
+        self._compiled_tokens.append(WHILE_START)
+        # keyword while
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # open paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self.compile_expression()
+
+        # close paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # open brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        self.compile_statements()
+
+        # close brace
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
+        # end while
+        self._compiled_tokens.append(WHILE_END)
 
     def compile_do(self) -> None:
         """Compiles a do statement according to the grammar
@@ -310,7 +348,15 @@ class CompilationEngine:
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
+        # open paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+
         self.compile_expression_list()
+
+        # close paren
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
 
         # We should now be at the ';'
         self._compiled_tokens.append(self._current_token)
@@ -333,6 +379,7 @@ class CompilationEngine:
             self.compile_expression()
 
         # We are now already at the ';'
+        print(self._current_token)
         self._compiled_tokens.append(self._current_token)
         self._compiled_tokens.append(RETURN_END)
         self.advance_token()
@@ -401,7 +448,7 @@ class CompilationEngine:
             # compile ending ']'
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
-        # subroutine call
+        # normal subroutine call
         elif next_token == OPEN_PAREN:
             # identifier
             self._compiled_tokens.append(self._current_token)
@@ -410,11 +457,29 @@ class CompilationEngine:
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
             # now compile the expression inside of '(' and ')'
-            self.compile_expression()
+            self.compile_expression_list()
             # compile ending ')'
             self._compiled_tokens.append(self._current_token)
-            # print(self._compiled_tokens)
-            print("calling self.advance_token()")
+            self.advance_token()
+        # className.subroutineName || varName.subroutineName
+        elif next_token == MEMBER_ACCESSOR:
+            # identifier
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # member accessor
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # identifier
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+            # '(' compile and advance
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+            self.compile_expression_list()
+
+            # compile ending ')'
+            self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
         # normal variable
@@ -428,12 +493,13 @@ class CompilationEngine:
     def compile_expression_list(self) -> None:
         """Compile an expression list which really only happens in a `subroutineCall`
 
-        (`expression`(`','expression`)*)?
+        (`expression (',' expression)`*)?
         """
 
         # ( Open Paren
-        self._compiled_tokens.append(self._current_token)
-        self.advance_token()
+        # self._compiled_tokens.append(self._current_token)
+        # self.advance_token()
+        # open paren should already be compiled!
 
         # expression(s)
         self._compiled_tokens.append(EXPRESSION_LIST_START)
@@ -448,8 +514,9 @@ class CompilationEngine:
         self._compiled_tokens.append(EXPRESSION_LIST_END)
 
         # ) Close paren
-        self._compiled_tokens.append(self._current_token)
-        self.advance_token()
+        # self._compiled_tokens.append(self._current_token)
+        # self.advance_token()
+        # close paren should already be compiled
 
 
 # Maybe these should be in a separate module?
@@ -466,11 +533,11 @@ def is_op(token: str) -> bool:
         `bool`: If the token is an op
     """
 
-    # If we have an empty string
+    # If we have an empty string or None
     if not token:
         return False
 
-    return token.split()[1] in OPS
+    return html.unescape(token.split()[1]) in OPS
 
 
 def is_identifier(token: str) -> bool:
@@ -482,5 +549,9 @@ def is_identifier(token: str) -> bool:
     Returns:
         `bool`: If the token is an identifier
     """
+
+    # If we have an empty string or None
+    if not token:
+        return False
 
     return token.split()[0] == "<identifier>"

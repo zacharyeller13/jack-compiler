@@ -24,10 +24,13 @@ OPEN_PAREN = "<symbol> ( </symbol>\n"
 CLOSE_PAREN = "<symbol> ) </symbol>\n"
 OPEN_BRACE = "<symbol> { </symbol>\n"
 CLOSE_BRACE = "<symbol> } </symbol>\n"
+MEMBER_ACCESSOR = "<symbol> . </symbol>\n"
 EXPRESSION_LIST_START = "<expressionList>\n"
 EXPRESSION_LIST_END = "</expressionList>\n"
 IF_STATEMENT = "<ifStatement>\n"
 END_IF = "</ifStatement>\n"
+WHILE_START = "<whileStatement>\n"
+WHILE_END = "</whileStatement>\n"
 
 KEYWORDS = {
     "class",
@@ -53,7 +56,17 @@ KEYWORDS = {
     "this",
 }
 
-OPS = {"+", "-", "*", "/", "&", "|", "<", ">", "="}
+OPS = {
+    "+",
+    "-",
+    "*",
+    "/",
+    "&",
+    "|",
+    "<",
+    ">",
+    "=",
+}
 
 SYMBOLS = {
     "{",

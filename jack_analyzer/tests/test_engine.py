@@ -251,11 +251,12 @@ def test_let_statement(
 @fixture
 def expression_list_tokens() -> list[str]:
     return [
-        "<symbol> ( </symbol>\n",
         "<integerConstant> 2 </integerConstant>\n",
         "<symbol> , </symbol>\n",
         "<identifier> x </identifier>\n",
         "<symbol> ) </symbol>\n",
+        # This close paren is necessary, b/c we would never have expression
+        # list in a vaccuum w/out parenthesis.
     ]
 
 
@@ -263,7 +264,6 @@ def expression_list_tokens() -> list[str]:
 def compiled_expression_list_tokens() -> list[str]:
     return deque(
         [
-            "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
             "<term>\n",
@@ -277,7 +277,6 @@ def compiled_expression_list_tokens() -> list[str]:
             "</term>\n",
             "</expression>\n",
             "</expressionList>\n",
-            "<symbol> ) </symbol>\n",
         ]
     )
 
@@ -417,3 +416,190 @@ def test_if_statement(if_statement, compiled_if_statement) -> None:
     engine = CompilationEngine("test", tokens=if_statement)
     engine.compile_if()
     assert engine._compiled_tokens == compiled_if_statement
+
+
+@fixture
+def while_statement() -> list[str]:
+    return [
+        "<keyword> while </keyword>\n",
+        "<symbol> ( </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> &lt; </symbol>\n",
+        "<identifier> length </identifier>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> a </identifier>\n",
+        "<symbol> [ </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> ] </symbol>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> Keyboard </identifier>\n",
+        "<symbol> . </symbol>\n",
+        "<identifier> readInt </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> + </symbol>\n",
+        "<integerConstant> 1 </integerConstant>\n",
+        "<symbol> ; </symbol>\n",
+        "<symbol> } </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<integerConstant> 0 </integerConstant>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> sum </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<integerConstant> 0 </integerConstant>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> while </keyword>\n",
+        "<symbol> ( </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> &lt; </symbol>\n",
+        "<identifier> length </identifier>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> sum </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> sum </identifier>\n",
+        "<symbol> + </symbol>\n",
+        "<identifier> a </identifier>\n",
+        "<symbol> [ </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> ] </symbol>\n",
+        "<symbol> ; </symbol>\n",
+        "<keyword> let </keyword>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> = </symbol>\n",
+        "<identifier> i </identifier>\n",
+        "<symbol> + </symbol>\n",
+        "<integerConstant> 1 </integerConstant>\n",
+        "<symbol> ; </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_while_statement() -> deque[str]:
+    return deque(
+        [
+            "<whileStatement>\n",
+            "<keyword> while </keyword>\n",
+            "<symbol> ( </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> i </identifier>\n",
+            "</term>\n",
+            "<symbol> &lt; </symbol>\n",
+            "<term>\n",
+            "<identifier> length </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ) </symbol>\n",
+            "<symbol> { </symbol>\n",
+            "<statements>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> a </identifier>\n",
+            "<symbol> [ </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> i </identifier>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ] </symbol>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> Keyboard </identifier>\n",
+            "<symbol> . </symbol>\n",
+            "<identifier> readInt </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>\n",
+            "</term>\n",
+            "</expression>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "<letStatement>\n",
+            "<keyword> let </keyword>\n",
+            "<identifier> i </identifier>\n",
+            "<symbol> = </symbol>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> i </identifier>\n",
+            "</term>\n",
+            "<symbol> + </symbol>\n",
+            "<term>\n",
+            "<integerConstant> 1 </integerConstant>\n",
+            "</term>\n",
+            "</expression>\n",
+            "<symbol> ; </symbol>\n",
+            "</letStatement>\n",
+            "</statements>\n",
+            "<symbol> } </symbol>\n",
+            "</whileStatement>\n",
+        ]
+    )
+
+
+def test_while_statement(while_statement, compiled_while_statement) -> None:
+    engine = CompilationEngine("test", tokens=while_statement)
+    engine.compile_while()
+    assert engine._compiled_tokens == compiled_while_statement
+
+
+@fixture
+def subroutine_call() -> list[str]:
+    return [
+        "<identifier> Keyboard </identifier>\n",
+        "<symbol> . </symbol>\n",
+        "<identifier> readInt </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>\n",
+        "<symbol> ) </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_call() -> deque[str]:
+    return deque(
+        [
+            "<expression>\n",
+            "<term>\n",
+            "<identifier> Keyboard </identifier>\n",
+            "<symbol> . </symbol>\n",
+            "<identifier> readInt </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<expressionList>\n",
+            "<expression>\n",
+            "<term>\n",
+            "<stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>\n",
+            "</term>\n",
+            "</expression>\n",
+            "</expressionList>\n",
+            "<symbol> ) </symbol>\n",
+            "</term>\n",
+            "</expression>\n",
+        ]
+    )
+
+
+def test_subroutine_call(subroutine_call, compiled_subroutine_call) -> None:
+    engine = CompilationEngine("test", tokens=subroutine_call)
+    engine.compile_expression()
+    assert engine._compiled_tokens == compiled_subroutine_call
