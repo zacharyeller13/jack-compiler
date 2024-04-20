@@ -9,7 +9,6 @@ from collections import deque
 from typing import Callable, Iterable, Optional
 
 import html
-import sys
 
 from constants import (
     CLOSE_BRACE,
@@ -73,7 +72,9 @@ class CompilationEngine:
 
     Attributes:
 
-        `_filename` (str): The filename to which we write the compiled code.
+        `_files` (Iterable[str]): List of files to be compiled by the engine
+        `_current_filename` (str): The filename to which we write the current code
+            being compiled.
         `_tokens` (deque[str]): All remaining tokens to be compiled.
             Is reduced by 1 token each time we `advance_token`.
         `_current_token` (str): The current token to be compiled.
@@ -83,36 +84,49 @@ class CompilationEngine:
 
     def __init__(
         self,
-        filename: str,
-        tokens: Optional[Iterable[str]] = None,
+        files: Iterable[str] | str,
         *,
+        tokens: Optional[Iterable[str]] = None,
         parse_func: Callable[[str], deque[str]] = parse_file,
     ) -> None:
         """Creates an instance of CompilationEngine
 
         Args:
-            `filename` (str): The filename to which we will write the compiled code.
-                If tokens is null, we also parse the file and create all tokens.
+            `files` (Iterable[str] | str): The list of files to be compiled.
+                If tokens is null, we will parse the each file and create all tokens.
+                If a single filename is provided, we just parse the single file
             `tokens` (Iterable[str] | None): An Iterable of tokens.
-                If none, the `filename` will be passed to a `parse_func`
+                If none, each file in `files` will be passed to a `parse_func`
                 to create the necessary tokens.
             `parse_func` (Callable[[str] , deque[str]]): Function used to parse tokens from
-                `filename` if tokens are not provided. (default: `parse_file` from `tokenizer`)
+                `files` if tokens are not provided. (default: `parse_file` from `tokenizer`)
         """
-        self._filename = filename
 
+        # Ensure self._files will always be an iterable
+        self._files = deque([files]) if isinstance(files, str) else deque(files)
+        # This is a little bit of extra work if a files is a string, but oh well
+        self._current_filename = self._files.popleft()[: -len(".jack")]
+
+        # If tokens are given, we assume that they are for the first file
         if tokens:
             self._tokens = deque(tokens)
         else:
-            self._tokens = parse_func(filename)
+            self._tokens = parse_func(self._current_filename)
+
+        # Create a default queue to hold compiled items
+        self._compiled_tokens = deque()
 
         # Automatically set the first token
         # We don't need to advance twice, b/c the first "token" will only be '<token>\n"
         # when we write to a file.  Otherwise we just start with the first token
         self.advance_token()
 
-        # Create a default queue of compiled items
-        self._compiled_tokens = deque()
+    def compile_all(self) -> None:
+        """Do all compilation activities for every file in `_files`"""
+
+    def write_compilation_file(self) -> None:
+        with open(f"{self._current_filename}.xml", "w", encoding="UTF-8") as f:
+            f.writelines(self._compiled_tokens)
 
     def advance_token(self) -> None:
         """Advances the currently active token
