@@ -107,7 +107,7 @@ class CompilationEngine:
         # Ensure self._files will always be an iterable
         self._files = deque([files]) if isinstance(files, str) else deque(files)
         # This is a little bit of extra work if a files is a string, but oh well
-        self._current_filename = self._files.popleft()[: -len(".jack")]
+        self._current_filename = self._files.popleft()
 
         # If tokens are given, we assume that they are for the first file
         if tokens:
@@ -138,10 +138,16 @@ class CompilationEngine:
         while self._files:
             self._current_filename = self._files.popleft()
             self._tokens = self.parse_func(self._current_filename)
+            # We need to set first token
+            self.advance_token()
             self.compile_class()
+            self.write_compilation_file()
+            self._compiled_tokens.clear()
 
     def write_compilation_file(self) -> None:
-        with open(f"{self._current_filename}.xml", "w", encoding="UTF-8") as f:
+        with open(
+            f"{self._current_filename[: -len('.jack')]}.xml", "w", encoding="UTF-8"
+        ) as f:
             f.writelines(self._compiled_tokens)
 
     def advance_token(self) -> None:
@@ -175,6 +181,9 @@ class CompilationEngine:
         """
 
         self._compiled_tokens.append("<class>\n")
+        # class keyword
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
 
         # class name
         self._compiled_tokens.append(self._current_token)
@@ -581,15 +590,32 @@ class CompilationEngine:
         if not is_identifier(self._current_token):
             # integerConstant, stringConstant, keywordConstant
             self._compiled_tokens.append(TERM_START)
-            if self._current_token == "<symbol> ~ </symbol>\n":
+            if self._current_token in (
+                "<symbol> ~ </symbol>\n",
+                "<symbol> - </symbol>\n",
+            ):
                 self._compiled_tokens.append(self._current_token)
                 self.advance_token()
                 self.compile_term()
+
+            # '(' expression ')'
+            elif self._current_token == OPEN_PAREN:
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+
+                self.compile_expression()
+
+                assert self._current_token == CLOSE_PAREN
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
+
+            # Anything else
             else:
                 self._compiled_tokens.append(self._current_token)
+                self.advance_token()
 
             self._compiled_tokens.append(TERM_END)
-            self.advance_token()
+            # self.advance_token()
             return
 
         # If is identifier, distinguish between variable, array entry, subroutine call

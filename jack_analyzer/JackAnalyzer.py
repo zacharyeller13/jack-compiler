@@ -20,8 +20,8 @@ def main() -> None:
     #     print(tokens)
     #     write_tokens_file(filename + "T", tokens)
 
-    # engine = CompilationEngine()
-    print(files_to_tokenize)
+    engine = CompilationEngine(files_to_tokenize)
+    engine.compile_all()
 
 
 if __name__ == "__main__":
