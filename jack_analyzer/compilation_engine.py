@@ -363,7 +363,7 @@ class CompilationEngine:
         self._compiled_tokens.append(DO_END)
         self.advance_token()
 
-    def compile_return(self, /) -> None:
+    def compile_return(self) -> None:
         """Compiles a return statement according to the grammar
 
         `return`: `expression`? ';'
