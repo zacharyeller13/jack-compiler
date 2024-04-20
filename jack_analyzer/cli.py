@@ -1,6 +1,7 @@
 """
 Module for accepting user input, parsing arguments, etc.
 """
+
 from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace

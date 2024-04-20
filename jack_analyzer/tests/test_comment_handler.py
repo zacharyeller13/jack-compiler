@@ -1,5 +1,4 @@
-"""Tests for functions that remove comments
-"""
+"""Tests for functions that remove comments"""
 
 from __future__ import annotations
 

@@ -4,6 +4,7 @@ Module with helper functions to parse and tokenize a .jack file
 Should ignore newlines, spaces, and comments and then parse the remaining
 pieces of a file into valid Jack tokens
 """
+
 from __future__ import annotations
 from collections import deque
 
@@ -11,7 +12,7 @@ import html
 import re
 
 from comment_handler import remove_comments
-from constants import KEYWORDS, SYMBOLS, ESCAPED_SYMBOLS
+from constants import KEYWORDS, SYMBOLS, TOKEN_TEMPLATE
 
 
 def is_symbol(char: str) -> bool:
@@ -91,11 +92,22 @@ def escape_token(token: str) -> str:
         `&lt;`, `&gt;`, and `&amp;` or the token itself with `"` removed
     """
 
-    # Instead of adding an if statement, I think it's faster/cleaner to
-    # just check every token against our escape dictionary and then return
-    # the token itself as the default if it's not one to be escaped.
-    # return ESCAPED_SYMBOLS.get(token, token).replace('"', "")
     return html.escape(token.replace('"', ""))
+
+
+def tag_token(token: str) -> str:
+    """Tags a token with it's respective XML tags
+
+    Args:
+        `token` (str): The token
+
+    Returns:
+        `str`: A formatted string of `TOKEN_TEMPLATE` with the token type and token
+    """
+
+    return TOKEN_TEMPLATE.format(
+        token_type=classify_token(token), token=escape_token(token)
+    )
 
 
 def tokenize(stack: deque[str]) -> deque[str]:
@@ -141,11 +153,11 @@ def tokenize_line(line: str) -> deque[str]:
 
     for word in split_line:
         if is_string_constant(word):
-            tokens.append(word)
+            tokens.append(tag_token(word))
         elif sum(sym in word for sym in SYMBOLS) > 0:
             tokens.extend(tokenize_symbols(word))
         else:
-            tokens.append(word)
+            tokens.append(tag_token(word))
 
     return tokens
 
@@ -169,13 +181,13 @@ def tokenize_symbols(word: str) -> deque[str]:
             token += char
         else:
             if token:
-                tokens.append(token)
+                tokens.append(tag_token(token))
                 token = ""
-            tokens.append(char)
+            tokens.append(tag_token(char))
 
     # Final add to tokens if we have a symbol of some kind at the end of the word
     if token:
-        tokens.append(token)
+        tokens.append(tag_token(token))
 
     return tokens
 

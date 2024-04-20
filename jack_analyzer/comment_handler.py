@@ -4,6 +4,7 @@ Module with helper functions to handle comments in a .jack file
 Will remove single line comments denoted by '//' as well as
 multi-line comments denoted by '/*' and '*/'
 """
+
 from __future__ import annotations
 from collections import deque
 
