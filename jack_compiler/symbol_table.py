@@ -4,7 +4,7 @@ different identifiers
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -23,12 +23,17 @@ class SymbolTable:
         `var_idx` (int): Current index of all local subroutine vars
     """
 
-    class_table: dict[str, Identifier]
-    subroutine_table: dict[str, Identifier]
-    static_idx: int
-    field_idx: int
-    arg_idx: int
-    var_idx: int
+    class_table: dict[str, Identifier] = field(default_factory=dict)
+    subroutine_table: dict[str, Identifier] = field(default_factory=dict)
+    static_idx: int = 0
+    field_idx: int = 0
+    arg_idx: int = 0
+    var_idx: int = 0
+
+    def start_subroutine(self) -> None:
+        """Clears the subroutine symbol table"""
+
+        self.subroutine_table.clear()
 
 
 @dataclass
