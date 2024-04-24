@@ -25,15 +25,55 @@ class SymbolTable:
 
     class_table: dict[str, Identifier] = field(default_factory=dict)
     subroutine_table: dict[str, Identifier] = field(default_factory=dict)
-    static_idx: int = 0
-    field_idx: int = 0
-    arg_idx: int = 0
-    var_idx: int = 0
+    indexes: dict[str, int] = field(
+        default_factory=lambda: {"static": 0, "field": 0, "arg": 0, "var": 0}
+    )
 
     def start_subroutine(self) -> None:
         """Clears the subroutine symbol table"""
 
         self.subroutine_table.clear()
+
+    def define(self, name: str, data_type: str, category: str) -> None:
+        """Defines a new identifier of given name, type, kind and assigns it
+            a running index
+
+        Args:
+            `name` (str): The identifier name
+            `data_type` (str): The datatype of the new Identifier. See `Identifier`
+                for list of possible types
+            `category` (str): The category of the new Identifier. See `Identifier`
+                for list of possible types
+
+        Raises:
+            `ValueError`: If the provided identifier already exists in the table
+                to which it would be assigned
+        """
+
+        # Define the new index
+        new_idx = self.indexes[category]
+        self.indexes[category] += 1
+
+        # Create the new identifier
+        new_id = Identifier(
+            name=name, data_type=data_type, category=category, index=new_idx
+        )
+
+        # Add it to class or subroutine table depending on type
+        if category in {"static", "field"}:
+            if exist_id := self.class_table.get(name):
+                raise ValueError(
+                    f"{name} already exists in the class table. {exist_id}"
+                )
+
+            self.class_table[name] = new_id
+        else:
+            if exist_id := self.subroutine_table.get(name):
+                raise ValueError(
+                    f"{name} already exists in the subroutine table. {exist_id}"
+                )
+
+            self.subroutine_table[name] = new_id
 
 
 @dataclass
