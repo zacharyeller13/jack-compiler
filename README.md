@@ -2,8 +2,6 @@
 
 Compiler for the Jack language (specified in [Nand2Tetris](https://www.nand2tetris.org)).  Translates a Jack program into the intermediate VM language.
 
-As of right now, will just be the prelimary part of the compiler, being the Analyzer.
-
 ## License
 
 This software is licensed under the MIT License.
