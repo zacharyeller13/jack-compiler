@@ -37,10 +37,13 @@ class Identifier:
 
     Attributes:
         `name` (str): The name of the identifier
+        `data_type` (str): One of 'int', 'bool', 'char', `String`, `Array`, or
+            some className defined in the current .jack files
         `category` (str): One of 'var','argument','static','field','class','subroutine'
         `index` (int): The current index based on which symbol table and category
     """
 
     name: str
+    data_type: str
     category: str
     index: int
