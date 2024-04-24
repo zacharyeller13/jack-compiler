@@ -6,8 +6,6 @@ in order to comply with submission rules of the Nand2Tetris course.
 
 from __future__ import annotations
 from cli import start_cli
-from tokenizer import parse_file
-from token_writer import write_tokens_file
 from compilation_engine import CompilationEngine
 
 
