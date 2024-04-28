@@ -710,7 +710,7 @@ class CompilationEngine:
 
 # Maybe these should be in a separate module?
 # Don't need to be in the class, as they don't need the state
-def is_op(token: str) -> bool:
+def is_op(token: Optional[str]) -> bool:
     """Return true if the passed token is an op
 
     `op`: `'+'`|`'-'`|`'*'`|`'/'`|`'&'`|`'|'`|`'<'`|`'>'`|`'='`
@@ -729,7 +729,7 @@ def is_op(token: str) -> bool:
     return html.unescape(token.split()[1]) in OPS
 
 
-def is_identifier(token: str) -> bool:
+def is_identifier(token: Optional[str]) -> bool:
     """Return true if passed token is an identifier
 
     Args:
