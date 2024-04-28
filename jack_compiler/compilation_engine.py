@@ -37,6 +37,7 @@ from constants import (
     WHILE_START,
 )
 
+from jack_compiler.symbol_table import SymbolTable
 from tokenizer import parse_file
 
 
@@ -79,7 +80,8 @@ class CompilationEngine:
             Is reduced by 1 token each time we `advance_token`.
         `_current_token` (str): The current token to be compiled.
             Updated by `advance_token` when necessary to move to the next token.
-
+        `_symbol_table` (SymbolTable): The symbol table being using for this
+            engine.
     """
 
     def __init__(
@@ -108,6 +110,8 @@ class CompilationEngine:
         self._files = deque([files]) if isinstance(files, str) else deque(files)
         # This is a little bit of extra work if a files is a string, but oh well
         self._current_filename = self._files.popleft()
+        # Setup our starting SymbolTable
+        self._symbol_table = SymbolTable()
 
         # If tokens are given, we assume that they are for the first file
         if tokens:
@@ -214,6 +218,9 @@ class CompilationEngine:
         `('static'|'field') type varName (',' varName)* ';'`
         """
 
+        # TODO: Add to symbol table
+        # TODO: output identifier category and index
+
         # classVarDec
         self._compiled_tokens.append("<classVarDec>\n")
 
@@ -249,6 +256,8 @@ class CompilationEngine:
         '(' parameterList ')' subroutineBody
         """
 
+        # TODO: Add to symbol table
+        # TODO: output identifier category and index
         self._compiled_tokens.append("<subroutineDec>\n")
 
         # constructor/function/method
@@ -620,7 +629,7 @@ class CompilationEngine:
 
         # If is identifier, distinguish between variable, array entry, subroutine call
         # lookahead, compile variable, array access, subroutine call accordingly
-        # This is repeating the same process for access and call - maybe refactor
+        # TODO: Also, if var | argument | static | field; output index from symbol table
         self._compiled_tokens.append(TERM_START)
         # peek at next token
         next_token = self.peek_next_token()
