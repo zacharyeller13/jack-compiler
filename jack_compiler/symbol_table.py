@@ -17,10 +17,7 @@ class SymbolTable:
             identifier name
         `subroutine_table` (dict[str, Identifier]): A dictionary of Identifiers, key is
             the Identifier name
-        `static_idx` (int): Current index of all static class vars
-        `field_idx` (int): Current index of all field class vars
-        `arg_idx` (int): Current index of all arg subroutine vars
-        `var_idx` (int): Current index of all local subroutine vars
+        `indexes` (dict[str, int]): All 4 indexes (static, field, arg, var).
     """
 
     class_table: dict[str, Identifier] = field(default_factory=dict)
