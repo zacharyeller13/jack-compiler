@@ -169,7 +169,7 @@ def test_return_statement():
 def test_constructor(tokens, engine) -> None:
     assert isinstance(engine, CompilationEngine)
     assert engine._tokens == deque(tokens[1:])
-    assert engine._current_filename == "test"
+    assert engine._current_filename == "test.jack"
 
 
 def test_constructor_no_tokens(tokens) -> None:
@@ -178,7 +178,7 @@ def test_constructor_no_tokens(tokens) -> None:
     )
     assert isinstance(engine, CompilationEngine)
     assert engine._tokens == deque(tokens[1:])
-    assert engine._current_filename == "test"
+    assert engine._current_filename == "test.jack"
 
 
 def test_advance_token(tokens, engine) -> None:
@@ -263,7 +263,7 @@ def expression_list_tokens() -> list[str]:
 
 
 @fixture
-def compiled_expression_list_tokens() -> list[str]:
+def compiled_expression_list_tokens() -> deque[str]:
     return deque(
         [
             "<expressionList>\n",

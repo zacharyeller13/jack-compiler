@@ -1,0 +1,56 @@
+from dataclasses import asdict
+from pytest import fixture
+
+from symbol_table import Identifier, SymbolTable
+from compilation_engine import CompilationEngine
+
+
+@fixture
+def test_class_var_tokens() -> list[str]:
+    return [
+        "<keyword> static </keyword>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> x </keyword>\n",
+        "<symbol> ; </symbol>\n",
+    ]
+
+
+@fixture
+def test_class_var_symbol_table():
+    identifier = Identifier(name="x", data_type="int", category="static", index=0)
+    table = SymbolTable(
+        class_table={"x": identifier},
+        indexes={"static": 1, "field": 0, "arg": 0, "var": 0},
+    )
+    yield table
+    del table
+
+
+def test_class_var_dec(test_class_var_tokens, test_class_var_symbol_table) -> None:
+    engine = CompilationEngine("test", tokens=test_class_var_tokens)
+    engine.compile_class_var_dec()
+    assert asdict(engine._symbol_table) == asdict(test_class_var_symbol_table)
+
+
+def test_base_symbol_table():
+    assert SymbolTable() == SymbolTable()
+
+
+def test_base_identifier():
+    assert Identifier("test", "int", "static", 0) == Identifier(
+        "test", "int", "static", 0
+    )
+
+
+def test_basic_symbol_table():
+    assert SymbolTable(
+        class_table={
+            "x": Identifier(name="x", data_type="int", category="static", index=0)
+        },
+        indexes={"static": 1, "field": 0, "arg": 0, "var": 0},
+    ) == SymbolTable(
+        class_table={
+            "x": Identifier(name="x", data_type="int", category="static", index=0)
+        },
+        indexes={"static": 1, "field": 0, "arg": 0, "var": 0},
+    )

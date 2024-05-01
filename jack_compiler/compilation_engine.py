@@ -225,12 +225,20 @@ class CompilationEngine:
         self._compiled_tokens.append("<classVarDec>\n")
 
         # static or field
+        static_field = self._current_token.split()[1]
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
         # type
+        data_type = self._current_token.split()[1]
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
+
+        # Add to symbol table
+        identifier = self._current_token.split()[1]
+        self._symbol_table.define(
+            name=identifier, data_type=data_type, category=static_field
+        )
 
         # (',' varName)*
         while self._current_token != STATEMENT_TERMINATOR:
