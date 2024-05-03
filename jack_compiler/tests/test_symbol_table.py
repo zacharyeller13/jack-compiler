@@ -1,3 +1,4 @@
+from collections import deque
 from dataclasses import asdict
 from pytest import fixture
 
@@ -13,6 +14,20 @@ def test_class_var_tokens() -> list[str]:
         "<identifier> x </keyword>\n",
         "<symbol> ; </symbol>\n",
     ]
+
+
+@fixture
+def compiled_class_var_tokens() -> deque[str]:
+    return deque(
+        [
+            "<classVarDec>\n",
+            "<keyword> static </keyword>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier category='static' index=0 usage='declared'> x </identifier>\n",
+            "<symbol> ; </symbol>\n",
+            "</classVarDec>\n",
+        ]
+    )
 
 
 @fixture
@@ -54,3 +69,9 @@ def test_basic_symbol_table():
         },
         indexes={"static": 1, "field": 0, "arg": 0, "var": 0},
     )
+
+
+def test_class_var_dec_output(test_class_var_tokens, compiled_class_var_tokens) -> None:
+    engine = CompilationEngine("test", tokens=test_class_var_tokens)
+    engine.compile_class_var_dec()
+    assert engine._compiled_tokens == compiled_class_var_tokens

@@ -234,20 +234,30 @@ class CompilationEngine:
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
-        # Add to symbol table
-        identifier = self._current_token.split()[1]
-        self._symbol_table.define(
-            name=identifier, data_type=data_type, category=static_field
-        )
-
         # (',' varName)*
         while self._current_token != STATEMENT_TERMINATOR:
             # ,
             if self._current_token == "<symbol> , </symbol>\n":
                 self._compiled_tokens.append(self._current_token)
                 self.advance_token()
+
             # varName
-            self._compiled_tokens.append(self._current_token)
+            # Add to symbol table
+            identifier_name = self._current_token.split()[1]
+            self._symbol_table.define(
+                name=identifier_name, data_type=data_type, category=static_field
+            )
+            identifier = " ".join(
+                (
+                    f"<identifier category='{static_field}'",
+                    f"index={self._symbol_table.class_table.get(identifier_name).index}",
+                    "usage='declared'>",
+                    identifier_name,
+                    "</identifier>\n",
+                )
+            )
+            # Output to file
+            self._compiled_tokens.append(identifier)
             self.advance_token()
 
         # ;
