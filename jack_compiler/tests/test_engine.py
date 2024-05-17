@@ -1049,9 +1049,9 @@ def compiled_class_var_dec() -> deque[str]:
             "<classVarDec>\n",
             "<keyword> field </keyword>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> x </identifier>\n",
+            "<identifier category='field' index=0 usage='declared'> x </identifier>\n",
             "<symbol> , </symbol>\n",
-            "<identifier> y </identifier>\n",
+            "<identifier category='field' index=1 usage='declared'> y </identifier>\n",
             "<symbol> ; </symbol>\n",
             "</classVarDec>\n",
         ]
