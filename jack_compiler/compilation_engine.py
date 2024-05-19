@@ -271,7 +271,10 @@ class CompilationEngine:
         '(' parameterList ')' subroutineBody
         """
 
-        # TODO: No symbol table adding here, we reset the subroutine symbol table
+        # TODO: For constructor and method
+        # If a constructor, clear both tables.
+        # If a method, add the implicit `this` argument to the subroutine table
+        # Currently, no way to know what the current type of `this` would be
         self._compiled_tokens.append("<subroutineDec>\n")
 
         # constructor/function/method
@@ -302,7 +305,7 @@ class CompilationEngine:
 
         self._compiled_tokens.append("</subroutineDec>\n")
 
-    def compile_parameter_list(self, /) -> None:
+    def compile_parameter_list(self) -> None:
         """Compile a subroutine's parameter list:
 
         `( (type varName) (',' type varName)* )?`
@@ -310,16 +313,21 @@ class CompilationEngine:
 
         self._compiled_tokens.append("<parameterList>\n")
 
+        # symbol table category
+        category = "argument"
+
         while self._current_token != CLOSE_PAREN:
             if self._current_token == "<symbol> , </symbol>\n":
                 self._compiled_tokens.append(self._current_token)
                 self.advance_token()
 
             # type
+            data_type = self._current_token.split()[1]
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
             # varName
+            identifier_name = self._current_token.split()[1]
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
@@ -334,6 +342,7 @@ class CompilationEngine:
         self._compiled_tokens.append("<subroutineBody>\n")
 
         # clear subroutine symbol table
+        # As we're starting a new local scope
         self._symbol_table.start_subroutine()
 
         # Compile open brace
