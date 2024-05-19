@@ -1,6 +1,6 @@
 from collections import deque
 from dataclasses import asdict
-from pytest import fixture
+from pytest import fixture, skip
 
 from symbol_table import Identifier, SymbolTable
 from compilation_engine import CompilationEngine
@@ -128,3 +128,47 @@ def test_multi_class_var_dec_output(
     engine = CompilationEngine("test", tokens=test_multi_class_var_tokens)
     engine.compile_class_var_dec()
     assert engine._compiled_tokens == compiled_multi_class_var_tokens
+
+
+@fixture
+def test_subroutine_dec_tokens() -> list[str]:
+    return [
+        "<keyword> function </keyword>\n",
+        "<keyword> void </keyword>\n",
+        "<identifier> func </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_dec_tokens() -> deque[str]:
+    return deque(
+        [
+            "<subroutineDec>\n",
+            "<keyword> function </keyword>\n",
+            "<keyword> void </keyword>\n",
+            "<identifier> func </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<parameterList>\n",
+            "</parameterList>\n",
+            "<symbol> ) </symbol>\n",
+            "<subroutineBody>\n",
+            "<symbol> { </symbol>\n",
+            "<symbol> } </symbol>\n",
+            "</subroutineBody>\n",
+            "</subroutineDec>\n",
+        ]
+    )
+
+
+def test_subroutine_dec_empty_body(
+    test_subroutine_dec_tokens, compiled_subroutine_dec_tokens
+) -> None:
+    """Subroutine declaration should just clear the subroutine table"""
+    engine = CompilationEngine("test", tokens=test_subroutine_dec_tokens)
+    engine.compile_subroutine_dec()
+    assert engine._compiled_tokens == compiled_subroutine_dec_tokens
+    assert len(engine._symbol_table.subroutine_table) == 0

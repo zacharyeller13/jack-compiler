@@ -218,9 +218,6 @@ class CompilationEngine:
         `('static'|'field') type varName (',' varName)* ';'`
         """
 
-        # TODO: Add to symbol table
-        # TODO: output identifier category and index
-
         # classVarDec
         self._compiled_tokens.append("<classVarDec>\n")
 
@@ -274,8 +271,7 @@ class CompilationEngine:
         '(' parameterList ')' subroutineBody
         """
 
-        # TODO: Add to symbol table
-        # TODO: output identifier category and index
+        # TODO: No symbol table adding here, we reset the subroutine symbol table
         self._compiled_tokens.append("<subroutineDec>\n")
 
         # constructor/function/method
@@ -287,6 +283,8 @@ class CompilationEngine:
         self.advance_token()
 
         # subroutineName
+
+        # Add to symbol table
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
@@ -334,6 +332,9 @@ class CompilationEngine:
         """
 
         self._compiled_tokens.append("<subroutineBody>\n")
+
+        # clear subroutine symbol table
+        self._symbol_table.start_subroutine()
 
         # Compile open brace
         self._compiled_tokens.append(self._current_token)
