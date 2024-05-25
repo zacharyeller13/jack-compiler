@@ -271,13 +271,19 @@ class CompilationEngine:
         '(' parameterList ')' subroutineBody
         """
 
-        # TODO: For constructor and method
-        # If a constructor, clear both tables.
-        # If a method, add the implicit `this` argument to the subroutine table
-        # Currently, no way to know what the current type of `this` would be
+        # TODO: For methods
         self._compiled_tokens.append("<subroutineDec>\n")
+        self._symbol_table.start_subroutine()
 
         # constructor/function/method
+        # If a method, add the implicit `this` arg to the subroutine table
+        # Should be able to use current filename as the `this` `data_type`
+        # Since filename should match the class name
+        if self._current_token.split()[1] == "method":
+            self._symbol_table.define(
+                name="this", data_type=self._current_filename, category="arg"
+            )
+
         self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
@@ -340,10 +346,6 @@ class CompilationEngine:
         """
 
         self._compiled_tokens.append("<subroutineBody>\n")
-
-        # clear subroutine symbol table
-        # As we're starting a new local scope
-        self._symbol_table.start_subroutine()
 
         # Compile open brace
         self._compiled_tokens.append(self._current_token)

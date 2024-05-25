@@ -55,6 +55,7 @@ class SymbolTable:
         new_id = Identifier(
             name=name, data_type=data_type, category=category, index=new_idx
         )
+        print(new_id)
 
         # Add it to class or subroutine table depending on type
         if category in {"static", "field"}:

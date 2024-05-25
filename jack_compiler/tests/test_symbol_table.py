@@ -172,3 +172,50 @@ def test_subroutine_dec_empty_body(
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec_tokens
     assert len(engine._symbol_table.subroutine_table) == 0
+
+
+@fixture
+def test_subroutine_dec_method_tokens() -> list[str]:
+    return [
+        "<keyword> method </keyword>\n",
+        "<keyword> void </keyword>\n",
+        "<identifier> func </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_dec_method_tokens() -> deque[str]:
+    return deque(
+        [
+            "<subroutineDec>\n",
+            "<keyword> method </keyword>\n",
+            "<keyword> void </keyword>\n",
+            "<identifier> func </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<parameterList>\n",
+            "</parameterList>\n",
+            "<symbol> ) </symbol>\n",
+            "<subroutineBody>\n",
+            "<symbol> { </symbol>\n",
+            "<symbol> } </symbol>\n",
+            "</subroutineBody>\n",
+            "</subroutineDec>\n",
+        ]
+    )
+
+
+def test_subroutine_dec_method(
+    test_subroutine_dec_method_tokens, compiled_subroutine_dec_method_tokens
+) -> None:
+    """Subroutine declaration should just clear the subroutine table"""
+    engine = CompilationEngine("test", tokens=test_subroutine_dec_method_tokens)
+    engine.compile_subroutine_dec()
+    assert engine._compiled_tokens == compiled_subroutine_dec_method_tokens
+    assert len(engine._symbol_table.subroutine_table) == 1
+    assert asdict(engine._symbol_table.subroutine_table.get("this")) == asdict(
+        Identifier(name="this", data_type="test", category="arg", index=0)
+    )
