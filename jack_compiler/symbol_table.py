@@ -27,9 +27,11 @@ class SymbolTable:
     )
 
     def start_subroutine(self) -> None:
-        """Clears the subroutine symbol table"""
+        """Clears the subroutine symbol table and resets indexes"""
 
         self.subroutine_table.clear()
+        self.indexes["arg"] = 0
+        self.indexes["var"] = 0
 
     def define(self, name: str, data_type: str, category: str) -> None:
         """Defines a new identifier of given name, type, kind and assigns it
