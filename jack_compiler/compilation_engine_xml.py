@@ -183,6 +183,9 @@ class CompilationEngineXml:
         `'class' className '{' classVarDec* subroutineDec* '}'`
         """
 
+        # Reset the symbol table class table
+        self._symbol_table.start_class()
+
         self._compiled_tokens.append("<class>\n")
         # class keyword
         self._compiled_tokens.append(self._current_token)

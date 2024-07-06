@@ -34,6 +34,14 @@ class SymbolTable:
         self.indexes["arg"] = 0
         self.indexes["var"] = 0
 
+    def start_class(self) -> None:
+        """Clears the symbol table and resets indexes"""
+
+        self.class_table.clear()
+        self.indexes["static"] = 0
+        self.indexes["field"] = 0
+        self.start_subroutine()
+
     def define(self, name: str, data_type: str, category: str) -> None:
         """Defines a new identifier of given name, type, kind and assigns it
             a running index
