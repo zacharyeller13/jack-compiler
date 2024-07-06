@@ -5,19 +5,24 @@ Should unescape escaped tokens as well as form new structures based on the Jack 
 """
 
 from __future__ import annotations
+
+import html
 from collections import deque
 from typing import Callable, Iterable, Optional
 
-import html
-
-from constants import (
+from jack_compiler.constants import (
     CLOSE_BRACE,
+    CLOSE_PAREN,
     DO_END,
     DO_START,
     END_IF,
     EXPRESSION_END,
+    EXPRESSION_LIST_END,
+    EXPRESSION_LIST_START,
     EXPRESSION_START,
     IF_STATEMENT,
+    LET_END,
+    LET_START,
     MEMBER_ACCESSOR,
     OPEN_PAREN,
     OPS,
@@ -26,19 +31,13 @@ from constants import (
     STATEMENT_TERMINATOR,
     TERM_END,
     TERM_START,
-    VAR_DEC_START,
     VAR_DEC_END,
-    LET_START,
-    LET_END,
-    CLOSE_PAREN,
-    EXPRESSION_LIST_START,
-    EXPRESSION_LIST_END,
+    VAR_DEC_START,
     WHILE_END,
     WHILE_START,
 )
-
 from jack_compiler.symbol_table import SymbolTable
-from tokenizer import parse_file
+from jack_compiler.tokenizer import parse_file
 
 
 class CompilationEngine:
@@ -228,7 +227,13 @@ class CompilationEngine:
 
         # type
         data_type = self._current_token.split()[1]
-        self._compiled_tokens.append(self._current_token)
+        if is_identifier(self._current_token):
+            self._compiled_tokens.append(
+                f"<identifier category='class'> {data_type} </identifier>\n"
+            )
+        else:
+            self._compiled_tokens.append(self._current_token)
+
         self.advance_token()
 
         # (',' varName)*
@@ -271,7 +276,6 @@ class CompilationEngine:
         '(' parameterList ')' subroutineBody
         """
 
-        # TODO: For methods
         self._compiled_tokens.append("<subroutineDec>\n")
         self._symbol_table.start_subroutine()
 
@@ -288,13 +292,25 @@ class CompilationEngine:
         self.advance_token()
 
         # void/type
-        self._compiled_tokens.append(self._current_token)
+        if is_identifier(self._current_token):
+            self._compiled_tokens.append(
+                f"<identifier category='class'> {self._current_token.split()[1]} </identifier>\n"
+            )
+        else:
+            self._compiled_tokens.append(self._current_token)
         self.advance_token()
 
         # subroutineName
-
-        # Add to symbol table
-        self._compiled_tokens.append(self._current_token)
+        identifier_name = self._current_token.split()[1]
+        category = "subroutine"
+        identifier = " ".join(
+            (
+                f"<identifier category='{category}'>",
+                identifier_name,
+                "</identifier>\n",
+            )
+        )
+        self._compiled_tokens.append(identifier)
         self.advance_token()
 
         # open paren
@@ -320,7 +336,7 @@ class CompilationEngine:
         self._compiled_tokens.append("<parameterList>\n")
 
         # symbol table category
-        category = "argument"
+        category = "arg"
 
         while self._current_token != CLOSE_PAREN:
             if self._current_token == "<symbol> , </symbol>\n":
@@ -329,12 +345,29 @@ class CompilationEngine:
 
             # type
             data_type = self._current_token.split()[1]
-            self._compiled_tokens.append(self._current_token)
+            if is_identifier(self._current_token):
+                self._compiled_tokens.append(
+                    f"<identifier category='class'> {data_type} </identifier>\n"
+                )
+            else:
+                self._compiled_tokens.append(self._current_token)
             self.advance_token()
 
             # varName
             identifier_name = self._current_token.split()[1]
-            self._compiled_tokens.append(self._current_token)
+            self._symbol_table.define(
+                name=identifier_name, data_type=data_type, category=category
+            )
+            identifier = " ".join(
+                (
+                    f"<identifier category='{category}'",
+                    f"index={self._symbol_table.subroutine_table.get(identifier_name).index}",
+                    "usage='declared'>",
+                    identifier_name,
+                    "</identifier>\n",
+                )
+            )
+            self._compiled_tokens.append(identifier)
             self.advance_token()
 
         self._compiled_tokens.append("</parameterList>\n")
@@ -376,9 +409,42 @@ class CompilationEngine:
 
         self._compiled_tokens.append(VAR_DEC_START)
 
-        while self._current_token != STATEMENT_TERMINATOR:
+        # So that we can get the data_type easily, let's change this and do the
+        # `var` and `type` bit outside the while loop
+        # var
+        self._compiled_tokens.append(self._current_token)
+        self.advance_token()
+        # type
+        data_type = self._current_token.split()[1]
+        if is_identifier(self._current_token):
+            self._compiled_tokens.append(
+                f"<identifier category='class'> {data_type} </identifier>\n"
+            )
+        else:
             self._compiled_tokens.append(self._current_token)
-            self.advance_token()
+
+        self.advance_token()
+
+        while self._current_token != STATEMENT_TERMINATOR:
+            if is_identifier(self._current_token):
+                identifier_name = self._current_token.split()[1]
+                self._symbol_table.define(
+                    name=identifier_name, data_type=data_type, category="var"
+                )
+                identifier = " ".join(
+                    (
+                        "<identifier category='var'",
+                        f"index={self._symbol_table.subroutine_table.get(identifier_name).index}",
+                        "usage='declared'>",
+                        identifier_name,
+                        "</identifier>\n",
+                    )
+                )
+                self._compiled_tokens.append(identifier)
+                self.advance_token()
+            else:
+                self._compiled_tokens.append(self._current_token)
+                self.advance_token()
 
         self._compiled_tokens.append(self._current_token)  # statement terminator
         self._compiled_tokens.append(VAR_DEC_END)
@@ -425,6 +491,7 @@ class CompilationEngine:
 
         Will be called if `self._current_token` == `let`
         """
+
         if self._current_token != "<keyword> let </keyword>\n":
             raise ValueError(f"{self._current_token} is not a let statement")
 
@@ -443,6 +510,24 @@ class CompilationEngine:
                 # append right side after '='
                 # or append the expression between '[' and ']'
                 self.compile_expression()
+
+            elif is_identifier(self._current_token):
+                # If it's an identifier, get attributes from symbol table
+                # as it should already be in there from being declared
+                identifier_name = self._current_token.split()[1]
+                identifier = self._symbol_table.get(identifier_name)
+                self._compiled_tokens.append(
+                    " ".join(
+                        (
+                            f"<identifier category='{identifier.category}'",
+                            f"index={identifier.index}",
+                            "usage='used'>",
+                            identifier_name,
+                            "</identifier>\n",
+                        )
+                    )
+                )
+                self.advance_token()
             else:
                 self._compiled_tokens.append(self._current_token)
                 self.advance_token()
@@ -549,16 +634,52 @@ class CompilationEngine:
         self.advance_token()
 
         # Compile subroutine call
-        # identifier(.identifier)?(expressionList)
-        # identifier
-        self._compiled_tokens.append(self._current_token)
+        # className|subroutineName (.identifier)?(expressionList)
+        if self.peek_next_token() == MEMBER_ACCESSOR:
+            # className or instance variable
+            identifier_name = self._current_token.split()[1]
+            identifier = self._symbol_table.get(identifier_name)
+            if not identifier:
+                # That means it's a class name
+                self._compiled_tokens.append(
+                    " ".join(
+                        (
+                            "<identifier category='class'>",
+                            identifier_name,
+                            "</identifier>\n",
+                        )
+                    )
+                )
+            else:
+                # This is an instance variable
+                self._compiled_tokens.append(
+                    " ".join(
+                        (
+                            f"<identifier category='{identifier.category}'",
+                            f"index={identifier.index}",
+                            "usage='used'>",
+                            identifier_name,
+                            "</identifier>\n",
+                        )
+                    )
+                )
+            self.advance_token()
+            # member accessor
+            self._compiled_tokens.append(self._current_token)
+            self.advance_token()
+
+        # Subroutine name
+        identifier_name = self._current_token.split()[1]
+        self._compiled_tokens.append(
+            " ".join(
+                (
+                    "<identifier category='subroutine'>",
+                    identifier_name,
+                    "</identifier>\n",
+                )
+            )
+        )
         self.advance_token()
-        # .identifier?
-        if self._current_token == "<symbol> . </symbol>\n":
-            self._compiled_tokens.append(self._current_token)
-            self.advance_token()
-            self._compiled_tokens.append(self._current_token)
-            self.advance_token()
 
         # open paren
         self._compiled_tokens.append(self._current_token)
@@ -659,14 +780,26 @@ class CompilationEngine:
 
         # If is identifier, distinguish between variable, array entry, subroutine call
         # lookahead, compile variable, array access, subroutine call accordingly
-        # TODO: Also, if var | argument | static | field; output index from symbol table
         self._compiled_tokens.append(TERM_START)
         # peek at next token
         next_token = self.peek_next_token()
         # array access
         if next_token == "<symbol> [ </symbol>\n":
             # identifier
-            self._compiled_tokens.append(self._current_token)
+            identifier_name = self._current_token.split()[1]
+            identifier = self._symbol_table.get(identifier_name)
+            self._compiled_tokens.append(
+                " ".join(
+                    (
+                        f"<identifier category='{identifier.category}'",
+                        f"index={identifier.index}",
+                        "usage='used'>",
+                        identifier_name,
+                        "</identifier>\n",
+                    )
+                )
+            )
+
             # advance to '[' compile and advance
             self.advance_token()
             self._compiled_tokens.append(self._current_token)
@@ -679,7 +812,20 @@ class CompilationEngine:
         # normal subroutine call
         elif next_token == OPEN_PAREN:
             # identifier
-            self._compiled_tokens.append(self._current_token)
+            identifier_name = self._current_token.split()[1]
+            identifier = self._symbol_table.get(identifier_name)
+            self._compiled_tokens.append(
+                " ".join(
+                    (
+                        f"<identifier category='{identifier.category}'",
+                        f"index={identifier.index}",
+                        "usage='used'>",
+                        identifier_name,
+                        "</identifier>\n",
+                    )
+                )
+            )
+
             # advance to '(' compile and advance
             self.advance_token()
             self._compiled_tokens.append(self._current_token)
@@ -692,14 +838,52 @@ class CompilationEngine:
         # className.subroutineName || varName.subroutineName
         elif next_token == MEMBER_ACCESSOR:
             # identifier
-            self._compiled_tokens.append(self._current_token)
+            identifier_name = self._current_token.split()[1]
+            identifier = self._symbol_table.get(identifier_name)
+            if not identifier:
+                # That means it's a class name and not a defined variable
+                self._compiled_tokens.append(
+                    " ".join(
+                        (
+                            "<identifier category='class'>",
+                            identifier_name,
+                            "</identifier>\n",
+                        )
+                    )
+                )
+            else:
+                self._compiled_tokens.append(
+                    " ".join(
+                        (
+                            f"<identifier category='{identifier.category}'",
+                            f"index={identifier.index}",
+                            "usage='used'>",
+                            identifier_name,
+                            "</identifier>\n",
+                        )
+                    )
+                )
             self.advance_token()
             # member accessor
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
+
             # identifier
-            self._compiled_tokens.append(self._current_token)
+            identifier_name = self._current_token.split()[1]
+            # Subroutine name.  If we were able to access instance fields/properties
+            # directly, we would need additional logic, but we use get/set methods
+            # So just this works
+            self._compiled_tokens.append(
+                " ".join(
+                    (
+                        "<identifier category='subroutine'>",
+                        identifier_name,
+                        "</identifier>\n",
+                    )
+                )
+            )
             self.advance_token()
+
             # '(' compile and advance
             self._compiled_tokens.append(self._current_token)
             self.advance_token()
@@ -712,7 +896,19 @@ class CompilationEngine:
 
         # normal variable
         else:
-            self._compiled_tokens.append(self._current_token)
+            identifier_name = self._current_token.split()[1]
+            identifier = self._symbol_table.get(identifier_name)
+            self._compiled_tokens.append(
+                " ".join(
+                    (
+                        f"<identifier category='{identifier.category}'",
+                        f"index={identifier.index}",
+                        "usage='used'>",
+                        identifier_name,
+                        "</identifier>\n",
+                    )
+                )
+            )
             self.advance_token()
 
         self._compiled_tokens.append(TERM_END)

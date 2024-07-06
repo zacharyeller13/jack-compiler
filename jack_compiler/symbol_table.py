@@ -5,6 +5,7 @@ different identifiers
 
 from __future__ import annotations
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
@@ -57,7 +58,6 @@ class SymbolTable:
         new_id = Identifier(
             name=name, data_type=data_type, category=category, index=new_idx
         )
-        print(new_id)
 
         # Add it to class or subroutine table depending on type
         if category in {"static", "field"}:
@@ -69,11 +69,34 @@ class SymbolTable:
             self.class_table[name] = new_id
         else:
             if exist_id := self.subroutine_table.get(name):
+                print(exist_id)
                 raise ValueError(
                     f"{name} already exists in the subroutine table. {exist_id}"
                 )
 
             self.subroutine_table[name] = new_id
+
+    def get(
+        self, item: str, default: Optional[Identifier] = None
+    ) -> Optional[Identifier]:
+        """Get an item from either the class or subroutine table
+
+        Args:
+            `item` (str): The item to retrieve
+            `default` (str | None): What to return if the item doesn't exist in
+                either table
+
+        Returns:
+            `item` if in one of the tables, otherwise `default`
+        """
+
+        if identifier := self.class_table.get(item):
+            return identifier
+
+        if identifier := self.subroutine_table.get(item):
+            return identifier
+
+        return default
 
 
 @dataclass
@@ -84,7 +107,7 @@ class Identifier:
         `name` (str): The name of the identifier
         `data_type` (str): One of 'int', 'bool', 'char', `String`, `Array`, or
             some className defined in the current .jack files
-        `category` (str): One of 'var','argument','static','field','class','subroutine'
+        `category` (str): One of 'var','arg','static','field','class','subroutine'
         `index` (int): The current index based on which symbol table and category
     """
 

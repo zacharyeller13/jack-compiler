@@ -1,9 +1,9 @@
 from collections import deque
 from dataclasses import asdict
-from pytest import fixture, skip
+from pytest import fixture
 
-from symbol_table import Identifier, SymbolTable
-from compilation_engine import CompilationEngine
+from jack_compiler.symbol_table import Identifier, SymbolTable
+from jack_compiler.compilation_engine import CompilationEngine
 
 
 @fixture
@@ -150,7 +150,7 @@ def compiled_subroutine_dec_tokens() -> deque[str]:
             "<subroutineDec>\n",
             "<keyword> function </keyword>\n",
             "<keyword> void </keyword>\n",
-            "<identifier> func </identifier>\n",
+            "<identifier category='subroutine'> func </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<parameterList>\n",
             "</parameterList>\n",
@@ -194,7 +194,7 @@ def compiled_subroutine_dec_method_tokens() -> deque[str]:
             "<subroutineDec>\n",
             "<keyword> method </keyword>\n",
             "<keyword> void </keyword>\n",
-            "<identifier> func </identifier>\n",
+            "<identifier category='subroutine'> func </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<parameterList>\n",
             "</parameterList>\n",
@@ -218,4 +218,55 @@ def test_subroutine_dec_method(
     assert len(engine._symbol_table.subroutine_table) == 1
     assert asdict(engine._symbol_table.subroutine_table.get("this")) == asdict(
         Identifier(name="this", data_type="test", category="arg", index=0)
+    )
+
+
+@fixture
+def test_subroutine_dec_parameter_tokens() -> list[str]:
+    return [
+        "<keyword> function </keyword>\n",
+        "<keyword> void </keyword>\n",
+        "<identifier> func </identifier>\n",
+        "<symbol> ( </symbol>\n",
+        "<keyword> int </keyword>\n",
+        "<identifier> x </identifier>\n",
+        "<symbol> ) </symbol>\n",
+        "<symbol> { </symbol>\n",
+        "<symbol> } </symbol>\n",
+    ]
+
+
+@fixture
+def compiled_subroutine_dec_parameter_tokens() -> deque[str]:
+    return deque(
+        [
+            "<subroutineDec>\n",
+            "<keyword> function </keyword>\n",
+            "<keyword> void </keyword>\n",
+            "<identifier category='subroutine'> func </identifier>\n",
+            "<symbol> ( </symbol>\n",
+            "<parameterList>\n",
+            "<keyword> int </keyword>\n",
+            "<identifier category='arg' index=0 usage='declared'> x </identifier>\n",
+            "</parameterList>\n",
+            "<symbol> ) </symbol>\n",
+            "<subroutineBody>\n",
+            "<symbol> { </symbol>\n",
+            "<symbol> } </symbol>\n",
+            "</subroutineBody>\n",
+            "</subroutineDec>\n",
+        ]
+    )
+
+
+def test_subroutine_dec_parameter(
+    test_subroutine_dec_parameter_tokens, compiled_subroutine_dec_parameter_tokens
+) -> None:
+    """Subroutine declaration should just clear the subroutine table"""
+    engine = CompilationEngine("test", tokens=test_subroutine_dec_parameter_tokens)
+    engine.compile_subroutine_dec()
+    assert engine._compiled_tokens == compiled_subroutine_dec_parameter_tokens
+    assert len(engine._symbol_table.subroutine_table) == 1
+    assert asdict(engine._symbol_table.subroutine_table.get("x")) == asdict(
+        Identifier(name="x", data_type="int", category="arg", index=0)
     )

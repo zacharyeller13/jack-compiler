@@ -6,8 +6,8 @@ from __future__ import annotations
 from collections import deque
 from pytest import fixture
 
-from compilation_engine import CompilationEngine, is_op
-from constants import (
+from jack_compiler.compilation_engine import CompilationEngine, is_op
+from jack_compiler.constants import (
     EXPRESSION_END,
     EXPRESSION_START,
     LET_END,
@@ -42,7 +42,7 @@ def compiled_var_dec():
             VAR_DEC_START,
             "<keyword> var </keyword>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=0 usage='declared'> i </identifier>\n",
             "<symbol> ; </symbol>\n",
             VAR_DEC_END,
         ]
@@ -56,9 +56,9 @@ def compiled_var_dec_long():
             VAR_DEC_START,
             "<keyword> var </keyword>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=0 usage='declared'> i </identifier>\n",
             "<symbol> , </symbol>\n",
-            "<identifier> j </identifier>\n",
+            "<identifier category='var' index=1 usage='declared'> j </identifier>\n",
             "<symbol> ; </symbol>\n",
             VAR_DEC_END,
         ]
@@ -136,11 +136,11 @@ def compiled_let_statement_array_accessor():
         [
             LET_START,
             "<keyword> let </keyword>\n",
-            "<identifier> arr </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> arr </identifier>\n",
             "<symbol> [ </symbol>\n",
             EXPRESSION_START,
             TERM_START,
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> i </identifier>\n",
             TERM_END,
             EXPRESSION_END,
             "<symbol> ] </symbol>\n",
@@ -187,7 +187,9 @@ def test_advance_token(tokens, engine) -> None:
     assert engine._current_token == tokens[1] == "<keyword> int </keyword>\n"
 
 
-def test_compile_var_dec(engine, compiled_var_dec) -> None:
+def test_compile_var_dec(tokens, compiled_var_dec) -> None:
+    engine = CompilationEngine("test.jack", tokens=tokens)
+    print(engine._symbol_table)
     engine.compile_var_dec()
     assert engine._compiled_tokens == compiled_var_dec
 
@@ -229,7 +231,7 @@ def compiled_term_unary_op():
             "<term>\n",
             "<symbol> ~ </symbol>\n",
             "<term>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> a </identifier>\n",
             "</term>\n",
             "</term>\n",
         ]
@@ -238,6 +240,7 @@ def compiled_term_unary_op():
 
 def test_term_unary_op(term_unary_op, compiled_term_unary_op) -> None:
     engine = CompilationEngine("test.jack", tokens=term_unary_op)
+    engine._symbol_table.define("a", "bool", "var")
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_unary_op
 
@@ -246,6 +249,10 @@ def test_let_statement(
     let_statement_array_accessor, compiled_let_statement_array_accessor
 ):
     engine = CompilationEngine("test.jack", tokens=let_statement_array_accessor)
+    # We have to manually set the symbol table because this is a stub
+    # Normally, these would already be declared and set while compiling
+    engine._symbol_table.define("i", "int", "var")
+    engine._symbol_table.define("arr", "Array", "var")
     engine.compile_let()
     assert engine._compiled_tokens == compiled_let_statement_array_accessor
 
@@ -275,7 +282,7 @@ def compiled_expression_list_tokens() -> deque[str]:
             "<symbol> , </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> x </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> x </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "</expressionList>\n",
@@ -287,6 +294,7 @@ def test_expression_list(
     expression_list_tokens, compiled_expression_list_tokens
 ) -> None:
     engine = CompilationEngine("test.jack", tokens=expression_list_tokens)
+    engine._symbol_table.define("x", "int", "var")
     engine.compile_expression_list()
     assert engine._compiled_tokens == compiled_expression_list_tokens
 
@@ -326,20 +334,20 @@ def compiled_statements():
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> game </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> game </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> game </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> game </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ; </symbol>\n",
             "</letStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> game </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> game </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> run </identifier>\n",
+            "<identifier category='subroutine'> run </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "</expressionList>\n",
@@ -348,9 +356,9 @@ def compiled_statements():
             "</doStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> game </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> game </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> dispose </identifier>\n",
+            "<identifier category='subroutine'> dispose </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "</expressionList>\n",
@@ -368,6 +376,7 @@ def compiled_statements():
 
 def test_compile_statements(statements, compiled_statements) -> None:
     engine = CompilationEngine("test.jack", tokens=statements)
+    engine._symbol_table.define("game", "Game", "var")
     engine.compile_statements()
     assert engine._compiled_tokens == compiled_statements
 
@@ -396,7 +405,7 @@ def compiled_if_statement() -> deque[str]:
             "<symbol> ( </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> b </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> b </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ) </symbol>\n",
@@ -416,6 +425,7 @@ def compiled_if_statement() -> deque[str]:
 
 def test_if_statement(if_statement, compiled_if_statement) -> None:
     engine = CompilationEngine("test.jack", tokens=if_statement)
+    engine._symbol_table.define("b", "bool", "var")
     engine.compile_if()
     assert engine._compiled_tokens == compiled_if_statement
 
@@ -498,11 +508,11 @@ def compiled_while_statement() -> deque[str]:
             "<symbol> ( </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> &lt; </symbol>\n",
             "<term>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> length </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ) </symbol>\n",
@@ -510,20 +520,20 @@ def compiled_while_statement() -> deque[str]:
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> a </identifier>\n",
             "<symbol> [ </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> i </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ] </symbol>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Keyboard </identifier>\n",
+            "<identifier category='class'> Keyboard </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> readInt </identifier>\n",
+            "<identifier category='subroutine'> readInt </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -539,11 +549,11 @@ def compiled_while_statement() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> i </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> + </symbol>\n",
             "<term>\n",
@@ -561,6 +571,9 @@ def compiled_while_statement() -> deque[str]:
 
 def test_while_statement(while_statement, compiled_while_statement) -> None:
     engine = CompilationEngine("test.jack", tokens=while_statement)
+    engine._symbol_table.define("length", "int", "var")
+    engine._symbol_table.define("i", "int", "var")
+    engine._symbol_table.define("a", "Array", "var")
     engine.compile_while()
     assert engine._compiled_tokens == compiled_while_statement
 
@@ -583,9 +596,9 @@ def compiled_subroutine_call() -> deque[str]:
         [
             "<expression>\n",
             "<term>\n",
-            "<identifier> Keyboard </identifier>\n",
+            "<identifier category='class'> Keyboard </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> readInt </identifier>\n",
+            "<identifier category='subroutine'> readInt </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -753,34 +766,34 @@ def compiled_subroutine_body() -> deque[str]:
             "<symbol> { </symbol>\n",
             "<varDec>\n",
             "<keyword> var </keyword>\n",
-            "<identifier> Array </identifier>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='class'> Array </identifier>\n",
+            "<identifier category='var' index=0 usage='declared'> a </identifier>\n",
             "<symbol> ; </symbol>\n",
             "</varDec>\n",
             "<varDec>\n",
             "<keyword> var </keyword>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='declared'> length </identifier>\n",
             "<symbol> ; </symbol>\n",
             "</varDec>\n",
             "<varDec>\n",
             "<keyword> var </keyword>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='declared'> i </identifier>\n",
             "<symbol> , </symbol>\n",
-            "<identifier> sum </identifier>\n",
+            "<identifier category='var' index=3 usage='declared'> sum </identifier>\n",
             "<symbol> ; </symbol>\n",
             "</varDec>\n",
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> length </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Keyboard </identifier>\n",
+            "<identifier category='class'> Keyboard </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> readInt </identifier>\n",
+            "<identifier category='subroutine'> readInt </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -796,18 +809,18 @@ def compiled_subroutine_body() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> a </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Array </identifier>\n",
+            "<identifier category='class'> Array </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> new </identifier>\n",
+            "<identifier category='subroutine'> new </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> length </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "</expressionList>\n",
@@ -818,7 +831,7 @@ def compiled_subroutine_body() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
@@ -832,11 +845,11 @@ def compiled_subroutine_body() -> deque[str]:
             "<symbol> ( </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> &lt; </symbol>\n",
             "<term>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> length </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ) </symbol>\n",
@@ -844,20 +857,20 @@ def compiled_subroutine_body() -> deque[str]:
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> a </identifier>\n",
             "<symbol> [ </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ] </symbol>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Keyboard </identifier>\n",
+            "<identifier category='class'> Keyboard </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> readInt </identifier>\n",
+            "<identifier category='subroutine'> readInt </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -873,11 +886,11 @@ def compiled_subroutine_body() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> + </symbol>\n",
             "<term>\n",
@@ -891,7 +904,7 @@ def compiled_subroutine_body() -> deque[str]:
             "</whileStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
@@ -902,7 +915,7 @@ def compiled_subroutine_body() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> sum </identifier>\n",
+            "<identifier category='var' index=3 usage='used'> sum </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
@@ -916,11 +929,11 @@ def compiled_subroutine_body() -> deque[str]:
             "<symbol> ( </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> &lt; </symbol>\n",
             "<term>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> length </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ) </symbol>\n",
@@ -928,19 +941,19 @@ def compiled_subroutine_body() -> deque[str]:
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> sum </identifier>\n",
+            "<identifier category='var' index=3 usage='used'> sum </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> sum </identifier>\n",
+            "<identifier category='var' index=3 usage='used'> sum </identifier>\n",
             "</term>\n",
             "<symbol> + </symbol>\n",
             "<term>\n",
-            "<identifier> a </identifier>\n",
+            "<identifier category='var' index=0 usage='used'> a </identifier>\n",
             "<symbol> [ </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ] </symbol>\n",
@@ -950,11 +963,11 @@ def compiled_subroutine_body() -> deque[str]:
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> i </identifier>\n",
+            "<identifier category='var' index=2 usage='used'> i </identifier>\n",
             "</term>\n",
             "<symbol> + </symbol>\n",
             "<term>\n",
@@ -968,9 +981,9 @@ def compiled_subroutine_body() -> deque[str]:
             "</whileStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> Output </identifier>\n",
+            "<identifier category='class'> Output </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> printString </identifier>\n",
+            "<identifier category='subroutine'> printString </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -984,18 +997,18 @@ def compiled_subroutine_body() -> deque[str]:
             "</doStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> Output </identifier>\n",
+            "<identifier category='class'> Output </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> printInt </identifier>\n",
+            "<identifier category='subroutine'> printInt </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> sum </identifier>\n",
+            "<identifier category='var' index=3 usage='used'> sum </identifier>\n",
             "</term>\n",
             "<symbol> / </symbol>\n",
             "<term>\n",
-            "<identifier> length </identifier>\n",
+            "<identifier category='var' index=1 usage='used'> length </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "</expressionList>\n",
@@ -1004,9 +1017,9 @@ def compiled_subroutine_body() -> deque[str]:
             "</doStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> Output </identifier>\n",
+            "<identifier category='class'> Output </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> println </identifier>\n",
+            "<identifier category='subroutine'> println </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "</expressionList>\n",
@@ -1094,7 +1107,7 @@ def compiled_subroutine_dec_no_parameters() -> deque[str]:
             "<subroutineDec>\n",
             "<keyword> method </keyword>\n",
             "<keyword> void </keyword>\n",
-            "<identifier> dispose </identifier>\n",
+            "<identifier category='subroutine'> dispose </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<parameterList>\n",
             "</parameterList>\n",
@@ -1104,9 +1117,9 @@ def compiled_subroutine_dec_no_parameters() -> deque[str]:
             "<statements>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> Memory </identifier>\n",
+            "<identifier category='class'> Memory </identifier>\n",
             "<symbol> . </symbol>\n",
-            "<identifier> deAlloc </identifier>\n",
+            "<identifier category='subroutine'> deAlloc </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "<expression>\n",
@@ -1188,18 +1201,18 @@ def compiled_subroutine_dec() -> deque[str]:
         [
             "<subroutineDec>\n",
             "<keyword> constructor </keyword>\n",
-            "<identifier> Square </identifier>\n",
-            "<identifier> new </identifier>\n",
+            "<identifier category='class'> Square </identifier>\n",
+            "<identifier category='subroutine'> new </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<parameterList>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> Ax </identifier>\n",
+            "<identifier category='arg' index=0 usage='declared'> Ax </identifier>\n",
             "<symbol> , </symbol>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> Ay </identifier>\n",
+            "<identifier category='arg' index=1 usage='declared'> Ay </identifier>\n",
             "<symbol> , </symbol>\n",
             "<keyword> int </keyword>\n",
-            "<identifier> Asize </identifier>\n",
+            "<identifier category='arg' index=2 usage='declared'> Asize </identifier>\n",
             "</parameterList>\n",
             "<symbol> ) </symbol>\n",
             "<subroutineBody>\n",
@@ -1207,40 +1220,40 @@ def compiled_subroutine_dec() -> deque[str]:
             "<statements>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> x </identifier>\n",
+            "<identifier category='field' index=0 usage='used'> x </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Ax </identifier>\n",
+            "<identifier category='arg' index=0 usage='used'> Ax </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ; </symbol>\n",
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> y </identifier>\n",
+            "<identifier category='field' index=1 usage='used'> y </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Ay </identifier>\n",
+            "<identifier category='arg' index=1 usage='used'> Ay </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ; </symbol>\n",
             "</letStatement>\n",
             "<letStatement>\n",
             "<keyword> let </keyword>\n",
-            "<identifier> size </identifier>\n",
+            "<identifier category='field' index=2 usage='used'> size </identifier>\n",
             "<symbol> = </symbol>\n",
             "<expression>\n",
             "<term>\n",
-            "<identifier> Asize </identifier>\n",
+            "<identifier category='arg' index=2 usage='used'> Asize </identifier>\n",
             "</term>\n",
             "</expression>\n",
             "<symbol> ; </symbol>\n",
             "</letStatement>\n",
             "<doStatement>\n",
             "<keyword> do </keyword>\n",
-            "<identifier> draw </identifier>\n",
+            "<identifier category='subroutine'> draw </identifier>\n",
             "<symbol> ( </symbol>\n",
             "<expressionList>\n",
             "</expressionList>\n",
@@ -1266,5 +1279,9 @@ def compiled_subroutine_dec() -> deque[str]:
 
 def test_subroutine_dec(subroutine_dec, compiled_subroutine_dec) -> None:
     engine = CompilationEngine("test.jack", tokens=subroutine_dec)
+    # 3 fields: x, y, and size
+    engine._symbol_table.define("x", "int", "field")
+    engine._symbol_table.define("y", "int", "field")
+    engine._symbol_table.define("size", "int", "field")
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec
