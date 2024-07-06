@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pytest import fixture
 
 from jack_compiler.symbol_table import Identifier, SymbolTable
-from jack_compiler.compilation_engine import CompilationEngine
+from jack_compiler.compilation_engine_xml import CompilationEngine
 
 
 @fixture

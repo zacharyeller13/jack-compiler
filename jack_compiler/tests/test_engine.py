@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import deque
 from pytest import fixture
 
-from jack_compiler.compilation_engine import CompilationEngine, is_op
+from jack_compiler.compilation_engine_xml import CompilationEngine, is_op
 from jack_compiler.constants import (
     EXPRESSION_END,
     EXPRESSION_START,

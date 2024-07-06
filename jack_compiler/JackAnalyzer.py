@@ -5,8 +5,8 @@ in order to comply with submission rules of the Nand2Tetris course.
 """
 
 from __future__ import annotations
-from cli import start_cli
-from compilation_engine import CompilationEngine
+from jack_compiler.cli import start_cli
+from jack_compiler.compilation_engine_xml import CompilationEngine
 
 
 def main() -> None:
