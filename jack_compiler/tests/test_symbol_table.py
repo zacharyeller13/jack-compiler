@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pytest import fixture
 
 from jack_compiler.symbol_table import Identifier, SymbolTable
-from jack_compiler.compilation_engine_xml import CompilationEngine
+from jack_compiler.compilation_engine_xml import CompilationEngineXml
 
 
 @fixture
@@ -42,7 +42,7 @@ def test_class_var_symbol_table():
 
 
 def test_class_var_dec(test_class_var_tokens, test_class_var_symbol_table) -> None:
-    engine = CompilationEngine("test", tokens=test_class_var_tokens)
+    engine = CompilationEngineXml("test", tokens=test_class_var_tokens)
     engine.compile_class_var_dec()
     assert asdict(engine._symbol_table) == asdict(test_class_var_symbol_table)
 
@@ -72,7 +72,7 @@ def test_basic_symbol_table():
 
 
 def test_class_var_dec_output(test_class_var_tokens, compiled_class_var_tokens) -> None:
-    engine = CompilationEngine("test", tokens=test_class_var_tokens)
+    engine = CompilationEngineXml("test", tokens=test_class_var_tokens)
     engine.compile_class_var_dec()
     assert engine._compiled_tokens == compiled_class_var_tokens
 
@@ -125,7 +125,7 @@ def test_multi_class_var_symbol_table():
 def test_multi_class_var_dec_output(
     test_multi_class_var_tokens, compiled_multi_class_var_tokens
 ) -> None:
-    engine = CompilationEngine("test", tokens=test_multi_class_var_tokens)
+    engine = CompilationEngineXml("test", tokens=test_multi_class_var_tokens)
     engine.compile_class_var_dec()
     assert engine._compiled_tokens == compiled_multi_class_var_tokens
 
@@ -168,7 +168,7 @@ def test_subroutine_dec_empty_body(
     test_subroutine_dec_tokens, compiled_subroutine_dec_tokens
 ) -> None:
     """Subroutine declaration should just clear the subroutine table"""
-    engine = CompilationEngine("test", tokens=test_subroutine_dec_tokens)
+    engine = CompilationEngineXml("test", tokens=test_subroutine_dec_tokens)
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec_tokens
     assert len(engine._symbol_table.subroutine_table) == 0
@@ -212,7 +212,7 @@ def test_subroutine_dec_method(
     test_subroutine_dec_method_tokens, compiled_subroutine_dec_method_tokens
 ) -> None:
     """Subroutine declaration should just clear the subroutine table"""
-    engine = CompilationEngine("test", tokens=test_subroutine_dec_method_tokens)
+    engine = CompilationEngineXml("test", tokens=test_subroutine_dec_method_tokens)
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec_method_tokens
     assert len(engine._symbol_table.subroutine_table) == 1
@@ -263,7 +263,7 @@ def test_subroutine_dec_parameter(
     test_subroutine_dec_parameter_tokens, compiled_subroutine_dec_parameter_tokens
 ) -> None:
     """Subroutine declaration should just clear the subroutine table"""
-    engine = CompilationEngine("test", tokens=test_subroutine_dec_parameter_tokens)
+    engine = CompilationEngineXml("test", tokens=test_subroutine_dec_parameter_tokens)
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec_parameter_tokens
     assert len(engine._symbol_table.subroutine_table) == 1

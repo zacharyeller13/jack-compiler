@@ -40,7 +40,7 @@ from jack_compiler.symbol_table import SymbolTable
 from jack_compiler.tokenizer import parse_file
 
 
-class CompilationEngine:
+class CompilationEngineXml:
     """Takes a set of tokens or file and outputs an XML file of the fully analyzed syntax.
 
     Follows the Jack grammar:
@@ -90,7 +90,7 @@ class CompilationEngine:
         tokens: Optional[Iterable[str]] = None,
         parse_func: Callable[[str], deque[str]] = parse_file,
     ) -> None:
-        """Creates an instance of CompilationEngine
+        """Creates an instance of CompilationEngineXml
 
         Args:
             `files` (Iterable[str] | str): The list of files to be compiled.

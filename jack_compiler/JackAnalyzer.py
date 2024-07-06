@@ -6,7 +6,7 @@ in order to comply with submission rules of the Nand2Tetris course.
 
 from __future__ import annotations
 from jack_compiler.cli import start_cli
-from jack_compiler.compilation_engine_xml import CompilationEngine
+from jack_compiler.compilation_engine_xml import CompilationEngineXml
 
 
 def main() -> None:
@@ -18,7 +18,7 @@ def main() -> None:
     #     print(tokens)
     #     write_tokens_file(filename + "T", tokens)
 
-    engine = CompilationEngine(files_to_tokenize)
+    engine = CompilationEngineXml(files_to_tokenize)
     engine.compile_all()
 
 

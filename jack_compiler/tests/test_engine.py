@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import deque
 from pytest import fixture
 
-from jack_compiler.compilation_engine_xml import CompilationEngine, is_op
+from jack_compiler.compilation_engine_xml import CompilationEngineXml, is_op
 from jack_compiler.constants import (
     EXPRESSION_END,
     EXPRESSION_START,
@@ -157,8 +157,8 @@ def compiled_let_statement_array_accessor():
 
 
 @fixture
-def engine(tokens) -> CompilationEngine:
-    return CompilationEngine("test.jack", tokens=tokens)
+def engine(tokens) -> CompilationEngineXml:
+    return CompilationEngineXml("test.jack", tokens=tokens)
 
 
 @fixture
@@ -167,16 +167,16 @@ def test_return_statement():
 
 
 def test_constructor(tokens, engine) -> None:
-    assert isinstance(engine, CompilationEngine)
+    assert isinstance(engine, CompilationEngineXml)
     assert engine._tokens == deque(tokens[1:])
     assert engine._current_filename == "test.jack"
 
 
 def test_constructor_no_tokens(tokens) -> None:
-    engine = CompilationEngine(
+    engine = CompilationEngineXml(
         "test.jack", tokens=None, parse_func=lambda _: deque(tokens)
     )
-    assert isinstance(engine, CompilationEngine)
+    assert isinstance(engine, CompilationEngineXml)
     assert engine._tokens == deque(tokens[1:])
     assert engine._current_filename == "test.jack"
 
@@ -188,20 +188,20 @@ def test_advance_token(tokens, engine) -> None:
 
 
 def test_compile_var_dec(tokens, compiled_var_dec) -> None:
-    engine = CompilationEngine("test.jack", tokens=tokens)
+    engine = CompilationEngineXml("test.jack", tokens=tokens)
     print(engine._symbol_table)
     engine.compile_var_dec()
     assert engine._compiled_tokens == compiled_var_dec
 
 
 def test_compile_var_dec_long(var_dec_long, compiled_var_dec_long) -> None:
-    engine = CompilationEngine("test.jack", tokens=var_dec_long)
+    engine = CompilationEngineXml("test.jack", tokens=var_dec_long)
     engine.compile_var_dec()
     assert engine._compiled_tokens == compiled_var_dec_long
 
 
 def test_expression(expression_tokens, compiled_expression) -> None:
-    engine = CompilationEngine("test.jack", tokens=expression_tokens)
+    engine = CompilationEngineXml("test.jack", tokens=expression_tokens)
     engine.compile_expression()
     assert engine._compiled_tokens == compiled_expression
 
@@ -211,7 +211,7 @@ def test_is_op() -> None:
 
 
 def test_term_non_identifier(term_non_identifier, compiled_term_non_identifier) -> None:
-    engine = CompilationEngine("test.jack", tokens=term_non_identifier)
+    engine = CompilationEngineXml("test.jack", tokens=term_non_identifier)
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_non_identifier
 
@@ -239,7 +239,7 @@ def compiled_term_unary_op():
 
 
 def test_term_unary_op(term_unary_op, compiled_term_unary_op) -> None:
-    engine = CompilationEngine("test.jack", tokens=term_unary_op)
+    engine = CompilationEngineXml("test.jack", tokens=term_unary_op)
     engine._symbol_table.define("a", "bool", "var")
     engine.compile_term()
     assert engine._compiled_tokens == compiled_term_unary_op
@@ -248,7 +248,7 @@ def test_term_unary_op(term_unary_op, compiled_term_unary_op) -> None:
 def test_let_statement(
     let_statement_array_accessor, compiled_let_statement_array_accessor
 ):
-    engine = CompilationEngine("test.jack", tokens=let_statement_array_accessor)
+    engine = CompilationEngineXml("test.jack", tokens=let_statement_array_accessor)
     # We have to manually set the symbol table because this is a stub
     # Normally, these would already be declared and set while compiling
     engine._symbol_table.define("i", "int", "var")
@@ -293,7 +293,7 @@ def compiled_expression_list_tokens() -> deque[str]:
 def test_expression_list(
     expression_list_tokens, compiled_expression_list_tokens
 ) -> None:
-    engine = CompilationEngine("test.jack", tokens=expression_list_tokens)
+    engine = CompilationEngineXml("test.jack", tokens=expression_list_tokens)
     engine._symbol_table.define("x", "int", "var")
     engine.compile_expression_list()
     assert engine._compiled_tokens == compiled_expression_list_tokens
@@ -375,7 +375,7 @@ def compiled_statements():
 
 
 def test_compile_statements(statements, compiled_statements) -> None:
-    engine = CompilationEngine("test.jack", tokens=statements)
+    engine = CompilationEngineXml("test.jack", tokens=statements)
     engine._symbol_table.define("game", "Game", "var")
     engine.compile_statements()
     assert engine._compiled_tokens == compiled_statements
@@ -424,7 +424,7 @@ def compiled_if_statement() -> deque[str]:
 
 
 def test_if_statement(if_statement, compiled_if_statement) -> None:
-    engine = CompilationEngine("test.jack", tokens=if_statement)
+    engine = CompilationEngineXml("test.jack", tokens=if_statement)
     engine._symbol_table.define("b", "bool", "var")
     engine.compile_if()
     assert engine._compiled_tokens == compiled_if_statement
@@ -570,7 +570,7 @@ def compiled_while_statement() -> deque[str]:
 
 
 def test_while_statement(while_statement, compiled_while_statement) -> None:
-    engine = CompilationEngine("test.jack", tokens=while_statement)
+    engine = CompilationEngineXml("test.jack", tokens=while_statement)
     engine._symbol_table.define("length", "int", "var")
     engine._symbol_table.define("i", "int", "var")
     engine._symbol_table.define("a", "Array", "var")
@@ -615,7 +615,7 @@ def compiled_subroutine_call() -> deque[str]:
 
 
 def test_subroutine_call(subroutine_call, compiled_subroutine_call) -> None:
-    engine = CompilationEngine("test.jack", tokens=subroutine_call)
+    engine = CompilationEngineXml("test.jack", tokens=subroutine_call)
     engine.compile_expression()
     assert engine._compiled_tokens == compiled_subroutine_call
 
@@ -1038,7 +1038,7 @@ def compiled_subroutine_body() -> deque[str]:
 
 
 def test_subroutine_body(subroutine_body, compiled_subroutine_body) -> None:
-    engine = CompilationEngine("test.jack", tokens=subroutine_body)
+    engine = CompilationEngineXml("test.jack", tokens=subroutine_body)
     engine.compile_subroutine_body()
     assert engine._compiled_tokens == compiled_subroutine_body
 
@@ -1072,7 +1072,7 @@ def compiled_class_var_dec() -> deque[str]:
 
 
 def test_class_var_dec(class_var_dec, compiled_class_var_dec) -> None:
-    engine = CompilationEngine("test.jack", tokens=class_var_dec)
+    engine = CompilationEngineXml("test.jack", tokens=class_var_dec)
     engine.compile_class_var_dec()
     assert engine._compiled_tokens == compiled_class_var_dec
 
@@ -1146,7 +1146,7 @@ def compiled_subroutine_dec_no_parameters() -> deque[str]:
 def test_subroutine_dec_no_parameters(
     subroutine_dec_no_parameters, compiled_subroutine_dec_no_parameters
 ) -> None:
-    engine = CompilationEngine("test.jack", tokens=subroutine_dec_no_parameters)
+    engine = CompilationEngineXml("test.jack", tokens=subroutine_dec_no_parameters)
     engine.compile_subroutine_dec()
     assert engine._compiled_tokens == compiled_subroutine_dec_no_parameters
 
@@ -1278,7 +1278,7 @@ def compiled_subroutine_dec() -> deque[str]:
 
 
 def test_subroutine_dec(subroutine_dec, compiled_subroutine_dec) -> None:
-    engine = CompilationEngine("test.jack", tokens=subroutine_dec)
+    engine = CompilationEngineXml("test.jack", tokens=subroutine_dec)
     # 3 fields: x, y, and size
     engine._symbol_table.define("x", "int", "field")
     engine._symbol_table.define("y", "int", "field")
