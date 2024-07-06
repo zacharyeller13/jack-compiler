@@ -157,7 +157,7 @@ class CompilationEngineXml:
         """Advances the currently active token
 
         If the tokens deque is empty when trying to advance, set the current token
-        to an empty string.  This should only be an issue at the end of `compile_class`
+        to `None`.  This should only be an issue at the end of `compile_class`
         """
 
         try:
