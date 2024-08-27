@@ -61,8 +61,9 @@ class VMWriter:
     """
 
     def __init__(self, file: str) -> None:
-        # TODO: Define constructor
         self._file = file
+        # TODO: Might move these to the compiler, as this may be a bad place to keep track of
+        # the label counts without broader understanding of the tokens and state
         self._if_num = 0
         self._while_num = 0
 
