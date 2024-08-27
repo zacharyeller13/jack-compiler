@@ -3,7 +3,49 @@ Module with VMWriter class to hold VM writing state as well as methods
 for writing VM language output to file during compilation
 """
 
-from enum import Enum
+from __future__ import annotations
+
+# This is to work through issues when the class grader uses older python
+# Like 3.8 which does not have StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        def __str__(self) -> str:
+            return self.value
+
+
+class Segment(StrEnum):
+    """
+    Represents the 8 memory segments in the VM
+    """
+
+    CONST = "constant"
+    ARG = "argument"
+    LOCAL = "local"
+    STATIC = "static"
+    THIS = "this"
+    THAT = "that"
+    POINTER = "pointer"
+    TEMP = "temp"
+
+
+class Arithmetic(StrEnum):
+    """
+    Represents the 9 arithmetic operations in the VM
+    """
+
+    ADD = "add"
+    SUB = "sub"
+    NEG = "neg"
+    EQ = "eq"
+    GT = "gt"
+    LT = "lt"
+    AND = "and"
+    OR = "or"
+    NOT = "not"
 
 
 class VMWriter:
@@ -18,45 +60,113 @@ class VMWriter:
             in `while` logic
     """
 
-    def __init__(self) -> None:
+    def __init__(self, file: str) -> None:
         # TODO: Define constructor
-        pass
+        self._file = file
+        self._if_num = 0
+        self._while_num = 0
 
-    def write_push(self) -> None:
-        # TODO: Implement push logic
-        pass
+    def write_push(self, segment: Segment, index: int) -> str:
+        """Writes a VM push command
 
-    def write_pop(self) -> None:
-        # TODO: Implement pop logic
-        pass
+        Args:
+            `segment` (Segment): One of the memory segments:
+                - "constant"
+                - "argument"
+                - "local"
+                - "static"
+                - "this"
+                - "that"
+                - "pointer"
+                - "temp"
+            `index` (int): Index to be pushed
+        """
 
-    def write_arithmetic(self) -> None:
+        # Decision: We return a string a to the caller (compilation_engine)
+        # which will then write to a deque and then call f.writelines()
+        return f"push {segment} {index}\n"
+
+    def write_pop(self, segment: Segment, index: int) -> str:
+        """Writes a VM pop command
+
+        Args:
+            `segment` (Segment): One of the memory segments:
+                - "constant"
+                - "argument"
+                - "local"
+                - "static"
+                - "this"
+                - "that"
+                - "pointer"
+                - "temp"
+            `index` (int): Index to be popped
+        """
+
+        return f"push {segment} {index}\n"
+
+    def write_arithmetic(self, command: Arithmetic) -> None:
         # TODO: Implement math logic
         pass
 
-    def write_label(self) -> None:
-        # TODO: Implement label logic
-        pass
+    def write_label(self, label: str) -> str:
+        """Writes a VM label
+        e.g.: `label LABEL`
 
-    def write_goto(self) -> None:
-        # TODO: Implement goto logic
-        pass
+        Args:
+            `label` (str): The label name
+        """
 
-    def write_if(self) -> None:
-        # TODO: Implement if logic
-        pass
+        return f"label {label}\n"
 
-    def write_call(self) -> None:
-        # TODO: Implement call logic
-        pass
+    def write_goto(self, label: str) -> str:
+        """Writes a VM goto
+        e.g.: `goto LABEL`
 
-    def write_function(self) -> None:
-        # TODO: Implement function logic
-        pass
+        Args:
+            `label` (str): The label name to `goto`
+        """
 
-    def write_return(self) -> None:
-        # TODO: Implement return logic
-        pass
+        return f"goto {label}\n"
+
+    def write_if(self, label: str) -> str:
+        """Writes a VM if-goto
+        e.g.: `if-goto LABEL`
+
+        Args:
+            `label` (str): The label name to `goto` on the if condition
+        """
+
+        return f"if-goto {label}\n"
+
+    def write_call(self, name: str, n_args: int) -> str:
+        """Writes a VM function call
+        e.g.: `call functionName nArgs`
+
+        Args:
+            `name` (str): The function to be called
+                (will only be `className.functionName`, either a method or function depending on the implicit this argument)
+            `n_args` (int): The number of arguments being passed to the function
+                call
+        """
+
+        return f"call {name} {n_args}\n"
+
+    def write_function(self, name: str, n_locals: int) -> str:
+        """Writes a VM function definition
+        e.g.: `function functionName nLocals`
+
+        Args:
+            `name` (str): The function to be declared
+                (will only be `className.functionName`, either a method or function depending on the implicit this argument)
+            `n_locals` (int): The number of arguments being passed to the function
+                definition
+        """
+
+        return f"call {name} {n_locals}\n"
+
+    def write_return(self) -> str:
+        """Writes vm return"""
+        return "return\n"
 
     # IF STATEMENT:
     # if (~(next = null))
@@ -109,34 +219,3 @@ class VMWriter:
     # push constant 0
     # pop this 0
     # label IF_END1
-
-
-class Segment(str, Enum):
-    """
-    Represents the 8 memory segments in the VM
-    """
-
-    CONST = "constant"
-    ARG = "argument"
-    LOCAL = "local"
-    STATIC = "static"
-    THIS = "this"
-    THAT = "that"
-    POINTER = "pointer"
-    TEMP = "temp"
-
-
-class Arithmetic(str, Enum):
-    """
-    Represents the 9 arithmetic operations in the VM
-    """
-
-    ADD = "add"
-    SUB = "sub"
-    NEG = "neg"
-    EQ = "eq"
-    GT = "gt"
-    LT = "lt"
-    AND = "and"
-    OR = "or"
-    NOT = "not"
