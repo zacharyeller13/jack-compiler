@@ -10,6 +10,7 @@ packages = [{include = "jack_compiler"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 pytest = "^7.4.3"
+ruff = "^0.5.5"
 
 
 [build-system]
